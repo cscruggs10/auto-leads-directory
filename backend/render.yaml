@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: auto-leads-backend
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: DATABASE_URL
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: https://frontend-k5mu0m3oc-corey-scruggs-projects.vercel.app
