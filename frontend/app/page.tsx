@@ -16,9 +16,21 @@ interface SearchFiltersType {
   mileage_max: string;
 }
 
+interface VehiclesResponse {
+  success: boolean;
+  data: any[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 export default function HomePage() {
   const { filters, updateFilters } = useFilters();
-  const { data: vehiclesData, isLoading } = useVehicles(filters);
+  const { data, isLoading } = useVehicles(filters);
+  const vehiclesData = data as VehiclesResponse | undefined;
   const { data: featuredData } = useFeaturedVehicles();
 
   const handleFiltersChange = (newFilters: SearchFiltersType) => {
