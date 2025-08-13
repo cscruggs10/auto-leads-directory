@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { SearchFilters } from '@/components/forms/SearchFilters';
 import { VehicleCard } from '@/components/cards/VehicleCard';
 import { Button } from '@/components/ui/Button';
@@ -12,7 +11,7 @@ export default function HomePage() {
   const { data: vehiclesData, isLoading } = useVehicles(filters);
   const { data: featuredData } = useFeaturedVehicles();
 
-  const handleFiltersChange = (newFilters: any) => {
+  const handleFiltersChange = (newFilters: Record<string, string>) => {
     updateFilters({ ...newFilters, page: 1 });
   };
 
