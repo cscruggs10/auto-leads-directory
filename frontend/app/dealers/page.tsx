@@ -7,7 +7,7 @@ import { useDealers } from '@/hooks/useDealers';
 
 export default function DealersPage() {
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useDealers({ page, limit: 12 });
+  const { data = { data: [] }, isLoading } = useDealers({ page, limit: 12 });
 
   return (
     <div className="min-h-screen bg-gray-50">
