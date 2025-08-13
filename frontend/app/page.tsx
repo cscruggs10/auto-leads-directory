@@ -173,7 +173,7 @@ export default function HomePage() {
               <p className="text-xl text-text-secondary mb-4">
                 No vehicles found matching your criteria
               </p>
-              <Button variant="outline" onClick={() => updateFilters(defaultFilters)}>
+              <Button variant="outline" onClick={() => updateFilters({})}>
                 Clear Filters
               </Button>
             </div>
