@@ -18,7 +18,7 @@ const leadSchema = z.object({
   
   // Step 2: Pre-qualification
   employment_status: z.enum(['full_time', 'part_time', 'self_employed', 'unemployed', 'retired']),
-  down_payment_available: z.string().transform(val => parseFloat(val)),
+  down_payment_available: z.string().min(1, 'Down payment amount is required'),
   bankruptcy_status: z.enum(['none', 'discharged', 'active']),
   credit_score_range: z.enum(['300-500', '500-600', '600-700', '700+']).optional(),
   preferred_contact_method: z.enum(['phone', 'email', 'text']).optional(),
