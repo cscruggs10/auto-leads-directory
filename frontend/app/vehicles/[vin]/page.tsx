@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { LeadCaptureForm } from '@/components/forms/LeadCaptureForm';
 import { useVehicle } from '@/hooks/useVehicles';
@@ -13,6 +13,7 @@ export default function VehicleDetailPage() {
   const vin = params.vin as string;
   const { data, isLoading, error } = useVehicle(vin);
   const [showLeadForm, setShowLeadForm] = useState(false);
+  const router = useRouter();
   const [selectedImage, setSelectedImage] = useState(0);
 
   if (isLoading) {
@@ -32,7 +33,7 @@ export default function VehicleDetailPage() {
       <div className="max-w-7xl mx-auto px-4 py-12 text-center">
         <h1 className="text-2xl font-bold text-text-primary mb-4">Vehicle Not Found</h1>
         <p className="text-text-secondary mb-8">The vehicle you're looking for is no longer available.</p>
-        <Button href="/">Browse Other Vehicles</Button>
+        <Button onClick={() => router.push('/')}>Browse Other Vehicles</Button>
       </div>
     );
   }
