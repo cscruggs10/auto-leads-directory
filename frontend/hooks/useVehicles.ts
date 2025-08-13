@@ -44,7 +44,7 @@ export function useVehicles(filters: VehicleFilters) {
       
       return response.data;
     },
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 }
 

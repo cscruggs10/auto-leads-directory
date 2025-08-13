@@ -28,7 +28,7 @@ export function useDealers(filters: DealerFilters = {}) {
       
       return response.data;
     },
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 }
 
