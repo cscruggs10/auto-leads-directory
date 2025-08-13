@@ -217,7 +217,7 @@ export function LeadCaptureForm({ vehicleVin, vehicleInfo }: LeadCaptureFormProp
               <Button type="button" variant="outline" onClick={() => setStep(1)}>
                 ← Previous
               </Button>
-              <Button type="submit" loading={submitLead.isLoading}>
+              <Button type="submit" loading={submitLead.isPending}>
                 Submit Request
               </Button>
             </div>
