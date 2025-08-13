@@ -6,12 +6,22 @@ import { Button } from '@/components/ui/Button';
 import { useVehicles, useFeaturedVehicles } from '@/hooks/useVehicles';
 import { useFilters } from '@/contexts/FilterContext';
 
+interface SearchFiltersType {
+  region: string;
+  year_min: string;
+  year_max: string;
+  make: string;
+  model: string;
+  down_payment_max: string;
+  mileage_max: string;
+}
+
 export default function HomePage() {
   const { filters, updateFilters } = useFilters();
   const { data: vehiclesData, isLoading } = useVehicles(filters);
   const { data: featuredData } = useFeaturedVehicles();
 
-  const handleFiltersChange = (newFilters: Record<string, string>) => {
+  const handleFiltersChange = (newFilters: SearchFiltersType) => {
     updateFilters({ ...newFilters, page: 1 });
   };
 
