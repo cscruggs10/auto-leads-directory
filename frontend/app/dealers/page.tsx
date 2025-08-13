@@ -7,7 +7,7 @@ import { useDealers } from '@/hooks/useDealers';
 
 export default function DealersPage() {
   const [page, setPage] = useState(1);
-  const { data = { data: [] }, isLoading } = useDealers({ page, limit: 12 });
+  const { data = { data: [], pagination: { totalPages: 0 } }, isLoading } = useDealers({ page, limit: 12 });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -39,7 +39,7 @@ export default function DealersPage() {
                 </div>
               ))}
             </div>
-          ) : data?.data && data.data.length > 0 ? (
+          ) : data.data && data.data.length > 0 ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {data.data.map((dealer: any) => (
@@ -48,7 +48,7 @@ export default function DealersPage() {
               </div>
 
               {/* Pagination */}
-              {data.pagination.totalPages > 1 && (
+              {data.pagination?.totalPages && data.pagination.totalPages > 1 && (
                 <div className="mt-8 flex justify-center">
                   <div className="flex space-x-2">
                     <Button
@@ -60,13 +60,13 @@ export default function DealersPage() {
                     </Button>
                     
                     <span className="flex items-center px-4">
-                      Page {page} of {data.pagination.totalPages}
+                      Page {page} of {data.pagination?.totalPages || 1}
                     </span>
                     
                     <Button
                       variant="outline"
                       onClick={() => setPage(page + 1)}
-                      disabled={page === data.pagination.totalPages}
+                      disabled={page === (data.pagination?.totalPages || 1)}
                     >
                       Next
                     </Button>
