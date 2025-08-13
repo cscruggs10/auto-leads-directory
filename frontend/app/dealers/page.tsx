@@ -5,9 +5,21 @@ import { DealerCard } from '@/components/cards/DealerCard';
 import { Button } from '@/components/ui/Button';
 import { useDealers } from '@/hooks/useDealers';
 
+interface DealersResponse {
+  data: any[];
+  pagination: {
+    totalPages: number;
+    currentPage: number;
+    totalCount: number;
+  };
+}
+
 export default function DealersPage() {
   const [page, setPage] = useState(1);
-  const { data = { data: [], pagination: { totalPages: 0 } }, isLoading } = useDealers({ page, limit: 12 });
+  const { data, isLoading } = useDealers({ page, limit: 12 });
+  const dealersData = data as DealersResponse | undefined;
+  const dealers = dealersData?.data || [];
+  const pagination = dealersData?.pagination || { totalPages: 0, currentPage: 1, totalCount: 0 };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -39,16 +51,16 @@ export default function DealersPage() {
                 </div>
               ))}
             </div>
-          ) : data.data && data.data.length > 0 ? (
+          ) : dealers && dealers.length > 0 ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {data.data.map((dealer: any) => (
+                {dealers.map((dealer: any) => (
                   <DealerCard key={dealer.id} dealer={dealer} />
                 ))}
               </div>
 
               {/* Pagination */}
-              {data.pagination?.totalPages && data.pagination.totalPages > 1 && (
+              {pagination.totalPages > 1 && (
                 <div className="mt-8 flex justify-center">
                   <div className="flex space-x-2">
                     <Button
@@ -60,13 +72,13 @@ export default function DealersPage() {
                     </Button>
                     
                     <span className="flex items-center px-4">
-                      Page {page} of {data.pagination?.totalPages || 1}
+                      Page {page} of {pagination.totalPages}
                     </span>
                     
                     <Button
                       variant="outline"
                       onClick={() => setPage(page + 1)}
-                      disabled={page === (data.pagination?.totalPages || 1)}
+                      disabled={page === pagination.totalPages}
                     >
                       Next
                     </Button>
