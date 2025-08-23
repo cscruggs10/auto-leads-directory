@@ -1,4 +1,5 @@
-import puppeteer, { Browser, Page } from 'puppeteer';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
 import pool from '../config/database';
 
 interface ScrapedVehicle {
@@ -47,7 +48,6 @@ export async function scrapeAllDealers(): Promise<void> {
 
 export async function scrapeDealerInventory(dealerId: number): Promise<void> {
   const startTime = Date.now();
-  let browser: Browser | null = null;
   
   try {
     console.log(`Starting scraping for dealer ${dealerId}`);
@@ -74,38 +74,25 @@ export async function scrapeDealerInventory(dealerId: number): Promise<void> {
     );
     const logId = logResult.rows[0].id;
     
-    // Launch browser
-    browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-extensions'
-      ]
-    });
+    console.log(`Fetching ${dealer.website_url}`);
     
-    const page = await browser.newPage();
-    
-    // Set viewport and user agent
-    await page.setViewport({ width: 1920, height: 1080 });
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
-    
-    // Navigate to dealer website
-    await page.goto(dealer.website_url, {
-      waitUntil: 'networkidle2',
+    // Fetch the page with Axios
+    const response = await axios.get(dealer.website_url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate',
+        'Connection': 'keep-alive',
+      },
       timeout: 30000
     });
     
-    // Wait for content to load
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Load HTML into Cheerio
+    const $ = cheerio.load(response.data);
     
-    // Scrape vehicles based on dealer configuration
-    const vehicles = await scrapeVehiclesFromPage(page, config);
+    // Scrape vehicles from the HTML
+    const vehicles = await scrapeVehiclesFromHTML($, dealer.website_url, config);
     
     console.log(`Found ${vehicles.length} vehicles for dealer ${dealerId}`);
     
@@ -218,84 +205,127 @@ export async function scrapeDealerInventory(dealerId: number): Promise<void> {
     );
     
     throw error;
-  } finally {
-    if (browser) {
-      await browser.close();
-    }
   }
 }
 
-async function scrapeVehiclesFromPage(page: Page, config: any): Promise<ScrapedVehicle[]> {
-  // This is a generic scraper - in production, customize for each dealer's website
+async function scrapeVehiclesFromHTML($: cheerio.CheerioAPI, baseUrl: string, config: any): Promise<ScrapedVehicle[]> {
   const vehicles: ScrapedVehicle[] = [];
   
   try {
-    // Example scraping logic - customize based on dealer website structure
-    const vehicleElements = await page.$$eval(
-      config.selector || '.vehicle-item',
-      elements => elements.map(el => {
-        // Extract vehicle data from DOM
-        const getTextContent = (selector: string): string => {
-          const element = el.querySelector(selector);
-          return element?.textContent?.trim() || '';
-        };
-        
-        const getAttribute = (selector: string, attr: string): string => {
-          const element = el.querySelector(selector);
-          return element?.getAttribute(attr) || '';
-        };
-        
-        // Parse vehicle information
-        const title = getTextContent('.vehicle-title, h3, h2');
-        const priceText = getTextContent('.price, .vehicle-price');
-        const vinText = getTextContent('.vin') || getAttribute('[data-vin]', 'data-vin');
-        const mileageText = getTextContent('.mileage, .vehicle-mileage');
-        const imageUrl = getAttribute('img', 'src');
-        
-        return {
-          title,
-          price: priceText,
-          vin: vinText,
-          mileage: mileageText,
-          image: imageUrl,
-          link: getAttribute('a', 'href')
-        };
-      })
-    );
+    console.log('Analyzing page structure for vehicle listings...');
     
-    // Process and validate scraped data
-    for (const element of vehicleElements) {
+    // First, try to find JSON-LD structured data
+    const jsonLdScripts = $('script[type="application/ld+json"]');
+    
+    jsonLdScripts.each((i, script) => {
       try {
-        // Parse title to extract year, make, model
-        const titleMatch = element.title.match(/(\d{4})\s+(\w+)\s+(.+)/);
-        if (!titleMatch) continue;
-        
-        const [, year, make, model] = titleMatch;
-        
-        // Generate VIN if not found (for demo purposes - in production, VIN is required)
-        const vin = element.vin || generateDemoVIN();
-        
-        // Parse numeric values
-        const price = parseFloat(element.price.replace(/[^0-9.]/g, '')) || undefined;
-        const mileage = parseInt(element.mileage.replace(/[^0-9]/g, '')) || undefined;
-        
-        vehicles.push({
-          vin,
-          year: parseInt(year),
-          make,
-          model: model.trim(),
-          price,
-          mileage,
-          down_payment: price ? Math.min(price * 0.1, 2000) : 1000,
-          photos: element.image ? [element.image] : [],
-          source_url: element.link || page.url()
-        });
-      } catch (error) {
-        console.error('Error parsing vehicle element:', error);
+        const jsonData = JSON.parse($(script).html() || '');
+        if (jsonData['@type'] === 'Car' || jsonData.name) {
+          console.log('Found structured data for vehicle:', jsonData.name || jsonData.model);
+          // Extract vehicle from JSON-LD if available
+        }
+      } catch (e) {
+        // Not valid JSON-LD, continue
+      }
+    });
+    
+    // Look for common vehicle listing patterns
+    const possibleSelectors = [
+      '.vehicle-item', '.car-item', '.inventory-item', '.listing-item',
+      '.vehicle', '.car', '.auto-item', '[data-vehicle]',
+      '.vehicle-card', '.car-card', '.inventory-card'
+    ];
+    
+    let vehicleElements: cheerio.Cheerio<cheerio.Element> | null = null;
+    
+    for (const selector of possibleSelectors) {
+      const elements = $(selector);
+      if (elements.length > 0) {
+        console.log(`Found ${elements.length} potential vehicles using selector: ${selector}`);
+        vehicleElements = elements;
+        break;
       }
     }
+    
+    // If no specific vehicle containers found, look for patterns in the page
+    if (!vehicleElements || vehicleElements.length === 0) {
+      console.log('No vehicle containers found, looking for price patterns...');
+      
+      // Look for price patterns as indicators of vehicle listings
+      const priceElements = $('*:contains("$")').filter((i, el) => {
+        const text = $(el).text();
+        return /\$[\d,]+/.test(text) && parseInt(text.replace(/[^0-9]/g, '')) > 5000;
+      });
+      
+      console.log(`Found ${priceElements.length} price elements`);
+      
+      // Try to find vehicle info near price elements
+      priceElements.each((i, priceEl) => {
+        if (vehicles.length >= 20) return; // Limit results
+        
+        const $priceEl = $(priceEl);
+        const priceText = $priceEl.text().trim();
+        const price = parseFloat(priceText.replace(/[^0-9.]/g, ''));
+        
+        if (price < 5000 || price > 100000) return; // Skip unrealistic prices
+        
+        // Look for vehicle info in siblings or parent elements
+        const container = $priceEl.closest('div, article, section').first();
+        const containerText = container.text();
+        
+        // Look for year pattern (4 digits between 1990-2025)
+        const yearMatch = containerText.match(/\b(19[9][0-9]|20[0-2][0-9])\b/);
+        const year = yearMatch ? parseInt(yearMatch[1]) : null;
+        
+        // Look for make/model patterns
+        const makes = ['Ford', 'Chevrolet', 'Chevy', 'Toyota', 'Honda', 'Nissan', 'Hyundai', 'Kia', 'Jeep', 'Dodge', 'Chrysler', 'Buick', 'GMC', 'Cadillac', 'BMW', 'Mercedes', 'Audi', 'Volkswagen', 'Mazda', 'Subaru', 'Mitsubishi', 'Acura', 'Lexus', 'Infiniti'];
+        
+        let make = '';
+        let model = '';
+        
+        for (const brandName of makes) {
+          const regex = new RegExp(`\\b${brandName}\\b`, 'i');
+          if (regex.test(containerText)) {
+            make = brandName;
+            // Try to extract model after make
+            const makeIndex = containerText.toLowerCase().indexOf(brandName.toLowerCase());
+            const afterMake = containerText.substring(makeIndex + brandName.length).trim();
+            const modelMatch = afterMake.match(/^\s*([A-Za-z0-9\-]+)/);
+            if (modelMatch) {
+              model = modelMatch[1];
+            }
+            break;
+          }
+        }
+        
+        // Look for mileage
+        const mileageMatch = containerText.match(/(\d{1,3}(?:,\d{3})*)\s*(?:miles?|mi)/i);
+        const mileage = mileageMatch ? parseInt(mileageMatch[1].replace(/,/g, '')) : undefined;
+        
+        if (year && make && model) {
+          const vin = generateDemoVIN(); // Generate demo VIN
+          
+          vehicles.push({
+            vin,
+            year,
+            make,
+            model: model.trim(),
+            price,
+            mileage,
+            down_payment: Math.min(price * 0.1, 2000),
+            photos: [],
+            source_url: baseUrl
+          });
+          
+          console.log(`Extracted vehicle: ${year} ${make} ${model} - $${price}`);
+        }
+      });
+    }
+    
+    console.log(`Successfully extracted ${vehicles.length} vehicles`);
+    
   } catch (error) {
-    console.error('Error in scrapeVehiclesFromPage:', error);
+    console.error('Error in scrapeVehiclesFromHTML:', error);
   }
   
   return vehicles;
