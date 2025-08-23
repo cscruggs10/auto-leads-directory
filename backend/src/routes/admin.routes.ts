@@ -23,6 +23,29 @@ router.post('/migrate', async (req: Request, res: Response) => {
   }
 });
 
+// Test scraper endpoint
+router.post('/scrape/:dealerId', async (req: Request, res: Response) => {
+  try {
+    const { dealerId } = req.params;
+    console.log(`🚀 Starting scraper test for dealer ${dealerId}...`);
+    
+    const { scrapeDealerInventory } = await import('../services/scraper.service');
+    await scrapeDealerInventory(parseInt(dealerId));
+    
+    res.json({
+      success: true,
+      message: `Scraping completed for dealer ${dealerId}`
+    });
+  } catch (error) {
+    console.error('❌ Scraping failed:', error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message,
+      stack: (error as Error).stack
+    });
+  }
+});
+
 // Debug endpoint to check database connection
 router.get('/debug/db', async (req: Request, res: Response) => {
   try {
