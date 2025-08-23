@@ -100,8 +100,20 @@ app.use((req: Request, res: Response) => {
 app.use(errorHandler);
 
 // Start server
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
+  
+  // Run migrations if requested
+  if (process.env.RUN_MIGRATIONS === 'true') {
+    console.log('🚀 Running database migrations...');
+    try {
+      const { runMigrations } = await import('./database/migrate');
+      await runMigrations();
+      console.log('✅ Database migrations completed successfully');
+    } catch (error) {
+      console.error('❌ Migration failed:', error);
+    }
+  }
   
   // Setup cron jobs for scraping if enabled
   // if (process.env.SCRAPING_ENABLED === 'true') {
