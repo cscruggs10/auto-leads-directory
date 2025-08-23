@@ -31,8 +31,8 @@ router.post('/dealers', async (req: Request, res: Response) => {
       INSERT INTO dealers (
         name, slug, city, state, phone, website_url, logo_url,
         average_rating, total_reviews, description, scraping_enabled,
-        business_hours, services
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        business_hours, services, is_active
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       RETURNING *
     `, [
       name,
@@ -55,7 +55,8 @@ router.post('/dealers', async (req: Request, res: Response) => {
         saturday: '9:00-18:00',
         sunday: '12:00-17:00'
       }),
-      JSON.stringify(services)
+      JSON.stringify(services),
+      true
     ]);
 
     res.status(201).json({
