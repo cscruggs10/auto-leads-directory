@@ -74,16 +74,24 @@ router.post('/dealers', async (req: Request, res: Response) => {
 router.get('/dealers', async (req: Request, res: Response) => {
   try {
     const result = await pool.query(`
-      SELECT d.*, COUNT(v.id) as vehicle_count
+      SELECT 
+        d.*,
+        COUNT(DISTINCT v.vin) as vehicle_count
       FROM dealers d
       LEFT JOIN vehicles v ON d.id = v.dealer_id AND v.is_available = true
-      GROUP BY d.id
+      GROUP BY d.id 
       ORDER BY d.created_at DESC
     `);
 
     res.json({
       success: true,
-      data: result.rows
+      data: result.rows,
+      pagination: {
+        total: result.rows.length,
+        page: 1,
+        limit: result.rows.length,
+        totalPages: 1
+      }
     });
   } catch (error) {
     console.error('Error fetching dealers:', error);
