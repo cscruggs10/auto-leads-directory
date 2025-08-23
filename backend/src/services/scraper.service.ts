@@ -246,13 +246,38 @@ async function scrapeVehiclesFromHTML(html: string, baseUrl: string, config: any
     if (jsonLdMatches) {
       for (const match of jsonLdMatches) {
         try {
-          const jsonContent = match.replace(/<script[^>]*>/i, '').replace(/<\/script>/i, '');
+          const jsonContent = match.replace(/<script[^>]*>/i, '').replace(/<\/script>/i, '').trim();
           const jsonData = JSON.parse(jsonContent);
-          if (jsonData['@type'] === 'Car' || jsonData.name) {
-            console.log('Found structured data for vehicle:', jsonData.name || jsonData.model);
-            // Extract vehicle from JSON-LD if available
+          
+          // Handle different JSON-LD structures
+          let vehicleData = null;
+          if (jsonData['@type'] === 'Car' || jsonData['@type'] === 'Vehicle') {
+            vehicleData = jsonData;
+          } else if (jsonData['@type'] === 'ItemList' && jsonData.itemListElement) {
+            // Handle ItemList containing vehicles
+            for (const item of jsonData.itemListElement) {
+              if (item.item && (item.item['@type'] === 'Car' || item.item['@type'] === 'Vehicle')) {
+                vehicleData = item.item;
+                await processJsonLdVehicle(vehicleData, baseUrl, vehicles);
+              }
+            }
+            continue;
+          } else if (Array.isArray(jsonData)) {
+            // Handle array of vehicles
+            for (const item of jsonData) {
+              if (item['@type'] === 'Car' || item['@type'] === 'Vehicle') {
+                vehicleData = item;
+                await processJsonLdVehicle(vehicleData, baseUrl, vehicles);
+              }
+            }
+            continue;
+          }
+          
+          if (vehicleData) {
+            await processJsonLdVehicle(vehicleData, baseUrl, vehicles);
           }
         } catch (e) {
+          console.log('JSON-LD parsing error:', e.message);
           // Not valid JSON-LD, continue
         }
       }
@@ -341,6 +366,88 @@ async function scrapeVehiclesFromHTML(html: string, baseUrl: string, config: any
   }
   
   return vehicles;
+}
+
+async function processJsonLdVehicle(vehicleData: any, baseUrl: string, vehicles: ScrapedVehicle[]): Promise<void> {
+  try {
+    // Extract vehicle information from JSON-LD structured data
+    const year = vehicleData.modelDate || vehicleData.vehicleModelDate || extractYear(vehicleData.name);
+    const make = vehicleData.brand?.name || vehicleData.manufacturer?.name || extractMake(vehicleData.name);
+    const model = vehicleData.model?.name || vehicleData.vehicleModel || extractModel(vehicleData.name, make);
+    const vin = vehicleData.vehicleIdentificationNumber || generateDemoVIN();
+    
+    // Extract pricing
+    let price = null;
+    if (vehicleData.offers && vehicleData.offers.price) {
+      price = parseFloat(vehicleData.offers.price.replace(/[^0-9.]/g, ''));
+    } else if (vehicleData.price) {
+      price = parseFloat(vehicleData.price.replace(/[^0-9.]/g, ''));
+    }
+    
+    // Extract mileage
+    let mileage = null;
+    if (vehicleData.mileageFromOdometer) {
+      mileage = parseInt(vehicleData.mileageFromOdometer.value || vehicleData.mileageFromOdometer);
+    }
+    
+    // Extract other details
+    const stockNumber = vehicleData.sku || extractStockNumber(vehicleData.name || '');
+    const exteriorColor = vehicleData.color || vehicleData.vehicleBodyType?.color;
+    const transmission = vehicleData.vehicleTransmission || vehicleData.transmissionType;
+    const engine = vehicleData.vehicleEngine?.name || vehicleData.engine;
+    
+    if (year && make && model && (price || mileage)) {
+      vehicles.push({
+        vin,
+        year: parseInt(year),
+        make: make.trim(),
+        model: model.trim(),
+        price,
+        mileage,
+        down_payment: price ? Math.min(price * 0.1, 2000) : 1000,
+        photos: [],
+        source_url: baseUrl,
+        stock_number: stockNumber,
+        exterior_color: exteriorColor,
+        transmission: transmission,
+        engine: engine
+      });
+      
+      console.log(`Extracted JSON-LD vehicle: ${year} ${make} ${model}${price ? ` - $${price}` : ''}${mileage ? ` (${mileage} mi)` : ''}`);
+    }
+  } catch (error) {
+    console.log('Error processing JSON-LD vehicle:', error.message);
+  }
+}
+
+function extractYear(text: string): string | null {
+  const yearMatch = text?.match(/\b(19[9][0-9]|20[0-2][0-9])\b/);
+  return yearMatch ? yearMatch[1] : null;
+}
+
+function extractMake(text: string): string | null {
+  const makes = ['Ford', 'Chevrolet', 'Chevy', 'Toyota', 'Honda', 'Nissan', 'Hyundai', 'Kia', 'Jeep', 'Dodge', 'Chrysler', 'Buick', 'GMC', 'Cadillac', 'BMW', 'Mercedes', 'Audi', 'Volkswagen', 'Mazda', 'Subaru', 'Mitsubishi', 'Acura', 'Lexus', 'Infiniti'];
+  for (const make of makes) {
+    if (text?.toLowerCase().includes(make.toLowerCase())) {
+      return make;
+    }
+  }
+  return null;
+}
+
+function extractModel(text: string, make: string): string | null {
+  if (!text || !make) return null;
+  const makeIndex = text.toLowerCase().indexOf(make.toLowerCase());
+  if (makeIndex === -1) return null;
+  
+  const afterMake = text.substring(makeIndex + make.length).trim();
+  const modelMatch = afterMake.match(/^\s*([A-Za-z0-9\-\s]+?)(?:\s|$|[0-9]{4})/);
+  return modelMatch ? modelMatch[1].trim() : null;
+}
+
+function extractStockNumber(text: string): string | null {
+  const stockMatch = text.match(/(?:stock|sku|#)\s*:?\s*([A-Z0-9\-]+)/i);
+  return stockMatch ? stockMatch[1] : null;
 }
 
 function generateDemoVIN(): string {
