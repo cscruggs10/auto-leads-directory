@@ -177,4 +177,45 @@ router.get('/dealers', async (req: Request, res: Response) => {
   }
 });
 
+// Clean up test data - keep only real dealers
+router.post('/cleanup', async (req: Request, res: Response) => {
+  try {
+    console.log('🧹 Starting database cleanup...');
+    
+    // Deactivate test dealers (keep only Car World Group and Car Choice)
+    const realDealerIds = [4, 5]; // Car World Group and Car Choice
+    
+    // Deactivate all dealers except the real ones
+    await pool.query(`
+      UPDATE dealers 
+      SET is_active = false, updated_at = NOW() 
+      WHERE id NOT IN ($1, $2)
+    `, realDealerIds);
+    
+    // Remove vehicles from deactivated dealers
+    await pool.query(`
+      DELETE FROM vehicles 
+      WHERE dealer_id NOT IN ($1, $2)
+    `, realDealerIds);
+    
+    // Get final count
+    const dealerCount = await pool.query('SELECT COUNT(*) as count FROM dealers WHERE is_active = true');
+    const vehicleCount = await pool.query('SELECT COUNT(*) as count FROM vehicles WHERE is_available = true');
+    
+    res.json({
+      success: true,
+      message: 'Database cleanup completed',
+      active_dealers: parseInt(dealerCount.rows[0].count),
+      available_vehicles: parseInt(vehicleCount.rows[0].count)
+    });
+    
+  } catch (error) {
+    console.error('❌ Cleanup failed:', error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message
+    });
+  }
+});
+
 export default router;
