@@ -1,6 +1,5 @@
 import https from 'https';
 import http from 'http';
-import { load } from 'cheerio';
 import pool from '../config/database';
 
 interface ScrapedVehicle {
@@ -118,11 +117,8 @@ export async function scrapeDealerInventory(dealerId: number): Promise<void> {
     // Fetch the page with Node.js built-in modules
     const htmlContent = await fetchHtml(dealer.website_url);
     
-    // Load HTML into Cheerio
-    const $ = load(htmlContent);
-    
-    // Scrape vehicles from the HTML
-    const vehicles = await scrapeVehiclesFromHTML($, dealer.website_url, config);
+    // Scrape vehicles from the HTML using regex parsing
+    const vehicles = await scrapeVehiclesFromHTML(htmlContent, dealer.website_url, config);
     
     console.log(`Found ${vehicles.length} vehicles for dealer ${dealerId}`);
     
@@ -238,118 +234,104 @@ export async function scrapeDealerInventory(dealerId: number): Promise<void> {
   }
 }
 
-async function scrapeVehiclesFromHTML($: any, baseUrl: string, config: any): Promise<ScrapedVehicle[]> {
+async function scrapeVehiclesFromHTML(html: string, baseUrl: string, config: any): Promise<ScrapedVehicle[]> {
   const vehicles: ScrapedVehicle[] = [];
   
   try {
     console.log('Analyzing page structure for vehicle listings...');
     
     // First, try to find JSON-LD structured data
-    const jsonLdScripts = $('script[type="application/ld+json"]');
+    const jsonLdMatches = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>(.*?)<\/script>/gis);
     
-    jsonLdScripts.each((i: number, script: any) => {
-      try {
-        const jsonData = JSON.parse($(script).html() || '');
-        if (jsonData['@type'] === 'Car' || jsonData.name) {
-          console.log('Found structured data for vehicle:', jsonData.name || jsonData.model);
-          // Extract vehicle from JSON-LD if available
+    if (jsonLdMatches) {
+      for (const match of jsonLdMatches) {
+        try {
+          const jsonContent = match.replace(/<script[^>]*>/i, '').replace(/<\/script>/i, '');
+          const jsonData = JSON.parse(jsonContent);
+          if (jsonData['@type'] === 'Car' || jsonData.name) {
+            console.log('Found structured data for vehicle:', jsonData.name || jsonData.model);
+            // Extract vehicle from JSON-LD if available
+          }
+        } catch (e) {
+          // Not valid JSON-LD, continue
         }
-      } catch (e) {
-        // Not valid JSON-LD, continue
-      }
-    });
-    
-    // Look for common vehicle listing patterns
-    const possibleSelectors = [
-      '.vehicle-item', '.car-item', '.inventory-item', '.listing-item',
-      '.vehicle', '.car', '.auto-item', '[data-vehicle]',
-      '.vehicle-card', '.car-card', '.inventory-card'
-    ];
-    
-    let vehicleElements: any = null;
-    
-    for (const selector of possibleSelectors) {
-      const elements = $(selector);
-      if (elements.length > 0) {
-        console.log(`Found ${elements.length} potential vehicles using selector: ${selector}`);
-        vehicleElements = elements;
-        break;
       }
     }
     
-    // If no specific vehicle containers found, look for patterns in the page
-    if (!vehicleElements || vehicleElements.length === 0) {
-      console.log('No vehicle containers found, looking for price patterns...');
+    // Look for price patterns as indicators of vehicle listings
+    // Find all text content that contains dollar amounts
+    const pricePattern = /\$[\d,]+(?:\.\d{2})?/g;
+    const priceMatches = html.match(pricePattern) || [];
+    
+    console.log(`Found ${priceMatches.length} price patterns`);
+    
+    // Split HTML into chunks around price patterns to analyze context
+    const htmlChunks = html.split(/(?=\$[\d,]+)/);
+    
+    for (const chunk of htmlChunks) {
+      if (vehicles.length >= 20) break; // Limit results
       
-      // Look for price patterns as indicators of vehicle listings
-      const priceElements = $('*:contains("$")').filter((i: number, el: any) => {
-        const text = $(el).text();
-        return /\$[\d,]+/.test(text) && parseInt(text.replace(/[^0-9]/g, '')) > 5000;
-      });
+      // Extract price from this chunk
+      const priceMatch = chunk.match(/\$(\d{1,3}(?:,\d{3})*)(?:\.\d{2})?/);
+      if (!priceMatch) continue;
       
-      console.log(`Found ${priceElements.length} price elements`);
+      const price = parseFloat(priceMatch[1].replace(/,/g, ''));
+      if (price < 5000 || price > 100000) continue; // Skip unrealistic prices
       
-      // Try to find vehicle info near price elements
-      priceElements.each((i: number, priceEl: any) => {
-        if (vehicles.length >= 20) return; // Limit results
-        
-        const $priceEl = $(priceEl);
-        const priceText = $priceEl.text().trim();
-        const price = parseFloat(priceText.replace(/[^0-9.]/g, ''));
-        
-        if (price < 5000 || price > 100000) return; // Skip unrealistic prices
-        
-        // Look for vehicle info in siblings or parent elements
-        const container = $priceEl.closest('div, article, section').first();
-        const containerText = container.text();
-        
-        // Look for year pattern (4 digits between 1990-2025)
-        const yearMatch = containerText.match(/\b(19[9][0-9]|20[0-2][0-9])\b/);
-        const year = yearMatch ? parseInt(yearMatch[1]) : null;
-        
-        // Look for make/model patterns
-        const makes = ['Ford', 'Chevrolet', 'Chevy', 'Toyota', 'Honda', 'Nissan', 'Hyundai', 'Kia', 'Jeep', 'Dodge', 'Chrysler', 'Buick', 'GMC', 'Cadillac', 'BMW', 'Mercedes', 'Audi', 'Volkswagen', 'Mazda', 'Subaru', 'Mitsubishi', 'Acura', 'Lexus', 'Infiniti'];
-        
-        let make = '';
-        let model = '';
-        
-        for (const brandName of makes) {
-          const regex = new RegExp(`\\b${brandName}\\b`, 'i');
-          if (regex.test(containerText)) {
-            make = brandName;
-            // Try to extract model after make
-            const makeIndex = containerText.toLowerCase().indexOf(brandName.toLowerCase());
-            const afterMake = containerText.substring(makeIndex + brandName.length).trim();
-            const modelMatch = afterMake.match(/^\s*([A-Za-z0-9\-]+)/);
-            if (modelMatch) {
-              model = modelMatch[1];
-            }
-            break;
+      // Remove HTML tags to get clean text for analysis
+      const cleanText = chunk.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      
+      // Look for year pattern (4 digits between 1990-2025)
+      const yearMatch = cleanText.match(/\b(19[9][0-9]|20[0-2][0-9])\b/);
+      const year = yearMatch ? parseInt(yearMatch[1]) : null;
+      
+      // Look for make/model patterns
+      const makes = ['Ford', 'Chevrolet', 'Chevy', 'Toyota', 'Honda', 'Nissan', 'Hyundai', 'Kia', 'Jeep', 'Dodge', 'Chrysler', 'Buick', 'GMC', 'Cadillac', 'BMW', 'Mercedes', 'Audi', 'Volkswagen', 'Mazda', 'Subaru', 'Mitsubishi', 'Acura', 'Lexus', 'Infiniti'];
+      
+      let make = '';
+      let model = '';
+      
+      for (const brandName of makes) {
+        const regex = new RegExp(`\\b${brandName}\\b`, 'i');
+        if (regex.test(cleanText)) {
+          make = brandName;
+          // Try to extract model after make
+          const makeIndex = cleanText.toLowerCase().indexOf(brandName.toLowerCase());
+          const afterMake = cleanText.substring(makeIndex + brandName.length).trim();
+          const modelMatch = afterMake.match(/^\s*([A-Za-z0-9\-]+)/);
+          if (modelMatch) {
+            model = modelMatch[1];
           }
+          break;
         }
+      }
+      
+      // Look for mileage
+      const mileageMatch = cleanText.match(/(\d{1,3}(?:,\d{3})*)\s*(?:miles?|mi)/i);
+      const mileage = mileageMatch ? parseInt(mileageMatch[1].replace(/,/g, '')) : undefined;
+      
+      // Look for stock number
+      const stockMatch = cleanText.match(/(?:stock|sku|id)[#:\s]*([A-Z0-9\-]+)/i);
+      const stockNumber = stockMatch ? stockMatch[1] : undefined;
+      
+      if (year && make && model) {
+        const vin = generateDemoVIN(); // Generate demo VIN
         
-        // Look for mileage
-        const mileageMatch = containerText.match(/(\d{1,3}(?:,\d{3})*)\s*(?:miles?|mi)/i);
-        const mileage = mileageMatch ? parseInt(mileageMatch[1].replace(/,/g, '')) : undefined;
+        vehicles.push({
+          vin,
+          year,
+          make,
+          model: model.trim(),
+          price,
+          mileage,
+          down_payment: Math.min(price * 0.1, 2000),
+          photos: [],
+          source_url: baseUrl,
+          stock_number: stockNumber
+        });
         
-        if (year && make && model) {
-          const vin = generateDemoVIN(); // Generate demo VIN
-          
-          vehicles.push({
-            vin,
-            year,
-            make,
-            model: model.trim(),
-            price,
-            mileage,
-            down_payment: Math.min(price * 0.1, 2000),
-            photos: [],
-            source_url: baseUrl
-          });
-          
-          console.log(`Extracted vehicle: ${year} ${make} ${model} - $${price}`);
-        }
-      });
+        console.log(`Extracted vehicle: ${year} ${make} ${model} - $${price}${mileage ? ` (${mileage} mi)` : ''}`);
+      }
     }
     
     console.log(`Successfully extracted ${vehicles.length} vehicles`);

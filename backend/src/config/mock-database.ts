@@ -98,6 +98,37 @@ export const mockDatabase = {
       description: 'Affordable vehicles with low down payments',
       vehicle_count: 32,
       is_active: true
+    },
+    {
+      id: 4,
+      name: 'Car World Group',
+      slug: 'car-world-group',
+      city: 'Memphis',
+      state: 'TN',
+      website_url: 'https://www.carworldarkansas.com/used-cars-memphis-tn',
+      logo_url: '/images/dealers/car-world-group.jpg',
+      average_rating: 4.0,
+      description: 'Quality pre-owned vehicles with financing options',
+      vehicle_count: 0,
+      is_active: true,
+      scraping_enabled: true,
+      scraping_config: {}
+    },
+    {
+      id: 5,
+      name: 'Car Choice',
+      slug: 'car-choice',
+      city: 'Memphis',
+      state: 'TN',
+      website_url: 'https://www.shopcarchoice.com/car-choice-memphis-inventory',
+      phone: '(901) 555-0123',
+      logo_url: '/images/dealers/car-choice.jpg',
+      average_rating: 4.1,
+      description: 'Wide selection of quality used vehicles with competitive financing options',
+      vehicle_count: 0,
+      is_active: true,
+      scraping_enabled: true,
+      scraping_config: {}
     }
   ]
 };
@@ -114,9 +145,45 @@ export const query = async (text: string, params?: any[]): Promise<any> => {
   }
   
   if (text.includes('dealers') && text.includes('SELECT')) {
+    if (params && params[0]) {
+      // Filter by dealer ID
+      const dealer = mockDatabase.dealers.find(d => d.id === params[0]);
+      return {
+        rows: dealer ? [dealer] : [],
+        rowCount: dealer ? 1 : 0
+      };
+    }
     return {
       rows: mockDatabase.dealers,
       rowCount: mockDatabase.dealers.length
+    };
+  }
+  
+  if (text.includes('INSERT INTO scraping_logs')) {
+    return {
+      rows: [{ id: Math.floor(Math.random() * 1000) }],
+      rowCount: 1
+    };
+  }
+  
+  if (text.includes('INSERT INTO vehicles')) {
+    return {
+      rows: [],
+      rowCount: 1
+    };
+  }
+  
+  if (text.includes('UPDATE vehicles')) {
+    return {
+      rows: [],
+      rowCount: 1
+    };
+  }
+  
+  if (text.includes('UPDATE scraping_logs')) {
+    return {
+      rows: [],
+      rowCount: 1
     };
   }
   
