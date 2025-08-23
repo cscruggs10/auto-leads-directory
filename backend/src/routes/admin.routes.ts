@@ -31,7 +31,8 @@ router.get('/debug/db', async (req: Request, res: Response) => {
       database: 'error',
       error: (error as Error).message,
       USE_MOCK_DB: process.env.USE_MOCK_DB,
-      DATABASE_URL: !!process.env.DATABASE_URL
+      DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'NOT_SET',
+      RUN_MIGRATIONS: process.env.RUN_MIGRATIONS
     });
   }
 });
