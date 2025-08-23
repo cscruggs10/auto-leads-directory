@@ -1,5 +1,5 @@
 import axios from 'axios';
-import * as cheerio from 'cheerio';
+import { load } from 'cheerio';
 import pool from '../config/database';
 
 interface ScrapedVehicle {
@@ -89,7 +89,7 @@ export async function scrapeDealerInventory(dealerId: number): Promise<void> {
     });
     
     // Load HTML into Cheerio
-    const $ = cheerio.load(response.data);
+    const $ = load(response.data);
     
     // Scrape vehicles from the HTML
     const vehicles = await scrapeVehiclesFromHTML($, dealer.website_url, config);
@@ -208,7 +208,7 @@ export async function scrapeDealerInventory(dealerId: number): Promise<void> {
   }
 }
 
-async function scrapeVehiclesFromHTML($: cheerio.CheerioAPI, baseUrl: string, config: any): Promise<ScrapedVehicle[]> {
+async function scrapeVehiclesFromHTML($: any, baseUrl: string, config: any): Promise<ScrapedVehicle[]> {
   const vehicles: ScrapedVehicle[] = [];
   
   try {
@@ -217,7 +217,7 @@ async function scrapeVehiclesFromHTML($: cheerio.CheerioAPI, baseUrl: string, co
     // First, try to find JSON-LD structured data
     const jsonLdScripts = $('script[type="application/ld+json"]');
     
-    jsonLdScripts.each((i, script) => {
+    jsonLdScripts.each((i: number, script: any) => {
       try {
         const jsonData = JSON.parse($(script).html() || '');
         if (jsonData['@type'] === 'Car' || jsonData.name) {
@@ -236,7 +236,7 @@ async function scrapeVehiclesFromHTML($: cheerio.CheerioAPI, baseUrl: string, co
       '.vehicle-card', '.car-card', '.inventory-card'
     ];
     
-    let vehicleElements: cheerio.Cheerio<any> | null = null;
+    let vehicleElements: any = null;
     
     for (const selector of possibleSelectors) {
       const elements = $(selector);
@@ -252,7 +252,7 @@ async function scrapeVehiclesFromHTML($: cheerio.CheerioAPI, baseUrl: string, co
       console.log('No vehicle containers found, looking for price patterns...');
       
       // Look for price patterns as indicators of vehicle listings
-      const priceElements = $('*:contains("$")').filter((i, el) => {
+      const priceElements = $('*:contains("$")').filter((i: number, el: any) => {
         const text = $(el).text();
         return /\$[\d,]+/.test(text) && parseInt(text.replace(/[^0-9]/g, '')) > 5000;
       });
@@ -260,7 +260,7 @@ async function scrapeVehiclesFromHTML($: cheerio.CheerioAPI, baseUrl: string, co
       console.log(`Found ${priceElements.length} price elements`);
       
       // Try to find vehicle info near price elements
-      priceElements.each((i, priceEl) => {
+      priceElements.each((i: number, priceEl: any) => {
         if (vehicles.length >= 20) return; // Limit results
         
         const $priceEl = $(priceEl);
