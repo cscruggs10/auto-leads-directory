@@ -3,6 +3,37 @@ import pool from '../config/database';
 
 const router = Router();
 
+// Debug endpoint to check database connection
+router.get('/debug/db', async (req: Request, res: Response) => {
+  try {
+    const useMockDb = !process.env.DATABASE_URL || process.env.USE_MOCK_DB === 'true';
+    
+    if (useMockDb) {
+      res.json({
+        database: 'mock',
+        USE_MOCK_DB: process.env.USE_MOCK_DB,
+        DATABASE_URL: !!process.env.DATABASE_URL
+      });
+    } else {
+      // Try to query the actual database
+      const result = await pool.query('SELECT COUNT(*) as dealer_count FROM dealers');
+      res.json({
+        database: 'postgresql',
+        dealer_count: result.rows[0].dealer_count,
+        USE_MOCK_DB: process.env.USE_MOCK_DB,
+        DATABASE_URL: !!process.env.DATABASE_URL
+      });
+    }
+  } catch (error) {
+    res.json({
+      database: 'error',
+      error: (error as Error).message,
+      USE_MOCK_DB: process.env.USE_MOCK_DB,
+      DATABASE_URL: !!process.env.DATABASE_URL
+    });
+  }
+});
+
 // Add new dealer
 router.post('/dealers', async (req: Request, res: Response) => {
   try {
