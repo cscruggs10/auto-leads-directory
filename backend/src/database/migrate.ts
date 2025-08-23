@@ -21,8 +21,23 @@ export async function runMigrations(): Promise<void> {
     console.log('✅ Database connection established');
     client.release();
     
-    // Read and execute schema
-    const schemaPath = path.join(__dirname, 'schema.sql');
+    // Read and execute schema - handle both dev and production paths
+    let schemaPath = path.join(__dirname, 'schema.sql');
+    
+    // In production (compiled), the file might be in src directory
+    if (!fs.existsSync(schemaPath)) {
+      schemaPath = path.join(__dirname, '../database/schema.sql');
+    }
+    
+    // If still not found, try from project root
+    if (!fs.existsSync(schemaPath)) {
+      schemaPath = path.join(process.cwd(), 'src/database/schema.sql');
+    }
+    
+    if (!fs.existsSync(schemaPath)) {
+      throw new Error(`Schema file not found. Tried: ${schemaPath}`);
+    }
+    
     const schema = fs.readFileSync(schemaPath, 'utf8');
     
     console.log('📋 Executing database schema...');
