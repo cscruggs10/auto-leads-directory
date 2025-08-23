@@ -35,7 +35,7 @@ export async function scrapeAllDealers(): Promise<void> {
     
     for (let i = 0; i < dealers.length; i += maxConcurrent) {
       const batch = dealers.slice(i, i + maxConcurrent);
-      await Promise.all(batch.map(dealer => scrapeDealerInventory(dealer.id)));
+      await Promise.all(batch.map((dealer: any) => scrapeDealerInventory(dealer.id)));
     }
     
     console.log('Completed scraping for all dealers');
@@ -102,7 +102,7 @@ export async function scrapeDealerInventory(dealerId: number): Promise<void> {
     });
     
     // Wait for content to load
-    await page.waitForTimeout(2000);
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
     // Scrape vehicles based on dealer configuration
     const vehicles = await scrapeVehiclesFromPage(page, config);
@@ -137,7 +137,7 @@ export async function scrapeDealerInventory(dealerId: number): Promise<void> {
               vehicle.vin,
               vehicle.mileage,
               vehicle.price,
-              vehicle.down_payment || vehicle.price ? Math.min(vehicle.price * 0.1, 2000) : 1000,
+              vehicle.down_payment || (vehicle.price ? Math.min(vehicle.price * 0.1, 2000) : 1000),
               JSON.stringify(vehicle.photos)
             ]
           );
@@ -159,7 +159,7 @@ export async function scrapeDealerInventory(dealerId: number): Promise<void> {
               vehicle.model,
               vehicle.mileage,
               vehicle.price,
-              vehicle.down_payment || vehicle.price ? Math.min(vehicle.price * 0.1, 2000) : 1000,
+              vehicle.down_payment || (vehicle.price ? Math.min(vehicle.price * 0.1, 2000) : 1000),
               JSON.stringify(vehicle.photos),
               vehicle.source_url,
               vehicle.stock_number,
@@ -214,7 +214,7 @@ export async function scrapeDealerInventory(dealerId: number): Promise<void> {
         duration_ms = $3,
         completed_at = NOW()
       WHERE dealer_id = $1 AND status = 'in_progress'`,
-      [dealerId, error.message, Date.now() - startTime]
+      [dealerId, (error as Error).message, Date.now() - startTime]
     );
     
     throw error;
@@ -276,8 +276,8 @@ async function scrapeVehiclesFromPage(page: Page, config: any): Promise<ScrapedV
         const vin = element.vin || generateDemoVIN();
         
         // Parse numeric values
-        const price = parseFloat(element.price.replace(/[^0-9.]/g, '')) || null;
-        const mileage = parseInt(element.mileage.replace(/[^0-9]/g, '')) || null;
+        const price = parseFloat(element.price.replace(/[^0-9.]/g, '')) || undefined;
+        const mileage = parseInt(element.mileage.replace(/[^0-9]/g, '')) || undefined;
         
         vehicles.push({
           vin,

@@ -1,4 +1,4 @@
-import cron from 'node-cron';
+import * as cron from 'node-cron';
 import { scrapeAllDealers } from './scraper.service';
 
 let scrapingJob: cron.ScheduledTask | null = null;
