@@ -1,4 +1,4 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://auto-leads-backend.railway.app/api/v1';
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://auto-leads-directory-production.up.railway.app/api/v1';
 
 export const config = {
   api: {
