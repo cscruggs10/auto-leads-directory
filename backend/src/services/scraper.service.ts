@@ -1,4 +1,5 @@
-import axios from 'axios';
+import https from 'https';
+import http from 'http';
 import { load } from 'cheerio';
 import pool from '../config/database';
 
@@ -46,6 +47,44 @@ export async function scrapeAllDealers(): Promise<void> {
   }
 }
 
+// Helper function to fetch HTML using Node.js built-in modules
+async function fetchHtml(url: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const client = url.startsWith('https:') ? https : http;
+    
+    const options = {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Connection': 'keep-alive',
+      },
+      timeout: 30000
+    };
+    
+    const req = client.get(url, options, (res) => {
+      let data = '';
+      
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      
+      res.on('end', () => {
+        resolve(data);
+      });
+    });
+    
+    req.on('error', (err) => {
+      reject(err);
+    });
+    
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Request timeout'));
+    });
+  });
+}
+
 export async function scrapeDealerInventory(dealerId: number): Promise<void> {
   const startTime = Date.now();
   
@@ -76,20 +115,11 @@ export async function scrapeDealerInventory(dealerId: number): Promise<void> {
     
     console.log(`Fetching ${dealer.website_url}`);
     
-    // Fetch the page with Axios
-    const response = await axios.get(dealer.website_url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate',
-        'Connection': 'keep-alive',
-      },
-      timeout: 30000
-    });
+    // Fetch the page with Node.js built-in modules
+    const htmlContent = await fetchHtml(dealer.website_url);
     
     // Load HTML into Cheerio
-    const $ = load(response.data);
+    const $ = load(htmlContent);
     
     // Scrape vehicles from the HTML
     const vehicles = await scrapeVehiclesFromHTML($, dealer.website_url, config);
