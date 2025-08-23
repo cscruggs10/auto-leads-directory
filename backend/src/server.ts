@@ -6,9 +6,9 @@ import rateLimit from 'express-rate-limit';
 import vehicleRoutes from './routes/vehicle.routes';
 import dealerRoutes from './routes/dealer.routes';
 import leadRoutes from './routes/lead.routes';
-import scraperRoutes from './routes/scraper.routes';
+// import scraperRoutes from './routes/scraper.routes';
 import { errorHandler } from './middleware/error.middleware';
-import { setupCronJobs } from './services/cron.service';
+// import { setupCronJobs } from './services/cron.service';
 
 dotenv.config();
 
@@ -33,8 +33,24 @@ app.use(helmet({
 }));
 
 // CORS configuration
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:3000',
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://your-frontend.vercel.app' // Update with actual Vercel URL
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -73,7 +89,7 @@ app.get('/health', (req: Request, res: Response) => {
 app.use('/api/v1/vehicles', vehicleRoutes);
 app.use('/api/v1/dealers', dealerRoutes);
 app.use('/api/v1/leads', leadRoutes);
-app.use('/api/v1/scraper', scraperRoutes);
+// app.use('/api/v1/scraper', scraperRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
@@ -88,9 +104,9 @@ const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
   
   // Setup cron jobs for scraping if enabled
-  if (process.env.SCRAPING_ENABLED === 'true') {
-    setupCronJobs();
-  }
+  // if (process.env.SCRAPING_ENABLED === 'true') {
+  //   setupCronJobs();
+  // }
 });
 
 // Graceful shutdown

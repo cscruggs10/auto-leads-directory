@@ -8,11 +8,10 @@ export function Footer() {
           {/* Company Info */}
           <div className="space-y-4">
             <div className="text-2xl font-bold">
-              AutoLeads<span className="text-secondary">Directory</span>
+              The Car<span className="text-secondary">Buyer</span> Assistant
             </div>
             <p className="text-gray-400 text-sm">
-              Connecting subprime auto buyers with trusted Buy Here Pay Here dealers 
-              in Memphis, TN and surrounding areas.
+              Your personal car buying assistant connecting you with 50+ dealerships who compete for your business. Industry insiders since 1994.
             </p>
             <div className="flex space-x-4">
               {/* Social Media Icons */}

@@ -3,6 +3,7 @@
 import { SearchFilters } from '@/components/forms/SearchFilters';
 import { VehicleCard } from '@/components/cards/VehicleCard';
 import { Button } from '@/components/ui/Button';
+import { DealershipsNetwork } from '@/components/sections/DealershipsNetwork';
 import { useVehicles, useFeaturedVehicles } from '@/hooks/useVehicles';
 import { useFilters } from '@/contexts/FilterContext';
 
@@ -45,37 +46,70 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-primary to-primary/90 text-white py-16">
+      <section className="relative bg-gradient-to-br from-gray-50 to-white py-20 lg:py-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              Find Your Perfect Vehicle in Memphis
+          <div className="text-center max-w-4xl mx-auto">
+            <h1 className="text-5xl lg:text-6xl font-bold text-text-primary mb-6 leading-tight">
+              Stop Begging Dealerships for Approval.{' '}
+              <span className="text-primary">Make Them Compete for YOU.</span>
             </h1>
-            <p className="text-xl mb-8 text-white/90">
-              Quality pre-owned vehicles with easy financing and low down payments
+            <p className="text-xl lg:text-2xl text-text-secondary mb-12 leading-relaxed">
+              We'll share your info with our network of 50+ dealerships who WANT subprime buyers. 
+              Watch them fight to earn your business with their best offers.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto">
+            
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto mb-16">
               <div className="text-center">
-                <div className="text-3xl font-bold">500+</div>
-                <div className="text-sm">Available Vehicles</div>
+                <div className="text-4xl lg:text-5xl font-bold text-primary mb-2">50+</div>
+                <div className="text-text-secondary font-medium">Competing Dealerships</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold">$500</div>
-                <div className="text-sm">Min Down Payment</div>
+                <div className="text-4xl lg:text-5xl font-bold text-primary mb-2">5+</div>
+                <div className="text-text-secondary font-medium">Avg Offers Per Buyer</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold">24hrs</div>
-                <div className="text-sm">Quick Approval</div>
+                <div className="text-4xl lg:text-5xl font-bold text-primary mb-2">1994</div>
+                <div className="text-text-secondary font-medium">Industry Insiders Since</div>
+              </div>
+            </div>
+            
+            {/* Trust Builders */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto text-sm">
+              <div className="text-center p-4 bg-white/50 rounded-xl border border-border-light">
+                <div className="text-secondary font-bold">✓</div>
+                <div className="font-medium text-text-primary">One Application</div>
+                <div className="text-text-light text-xs">No more filling out forms at every lot</div>
+              </div>
+              <div className="text-center p-4 bg-white/50 rounded-xl border border-border-light">
+                <div className="text-secondary font-bold">✓</div>
+                <div className="font-medium text-text-primary">Multiple Approvals</div>
+                <div className="text-text-light text-xs">Dealerships compete for your business</div>
+              </div>
+              <div className="text-center p-4 bg-white/50 rounded-xl border border-border-light">
+                <div className="text-secondary font-bold">✓</div>
+                <div className="font-medium text-text-primary">Better Terms</div>
+                <div className="text-text-light text-xs">Competition drives down your rate</div>
+              </div>
+              <div className="text-center p-4 bg-white/50 rounded-xl border border-border-light">
+                <div className="text-secondary font-bold">✓</div>
+                <div className="font-medium text-text-primary">Expert Guidance</div>
+                <div className="text-text-light text-xs">We know who approves what</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Dealerships Network */}
+      <DealershipsNetwork />
+
       {/* Search Filters */}
-      <section className="py-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SearchFilters onFiltersChange={handleFiltersChange} loading={isLoading} />
+      <section className="py-12 bg-background-gray">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-surface rounded-3xl shadow-search p-8 border border-border-light">
+            <SearchFilters onFiltersChange={handleFiltersChange} loading={isLoading} />
+          </div>
         </div>
       </section>
 
@@ -94,39 +128,49 @@ export default function HomePage() {
       )}
 
       {/* Search Results */}
-      <section className="py-12 bg-gray-50">
+      <section className="py-16 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-text-primary">
-              {vehiclesData?.pagination?.total || 0} Vehicles Found
-            </h2>
-            <select
-              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20"
-              value={filters.sort}
-              onChange={(e) => updateFilters({ sort: e.target.value })}
-            >
-              <option value="created_at_desc">Newest First</option>
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
-              <option value="year_desc">Year: Newest</option>
-              <option value="year_asc">Year: Oldest</option>
-              <option value="mileage_asc">Mileage: Low to High</option>
-            </select>
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h2 className="text-3xl font-bold text-text-primary mb-2">
+                {vehiclesData?.pagination?.total || 0} dealerships ready to compete for you
+              </h2>
+              <p className="text-text-secondary">
+                Each vehicle connects you with a dealer who actively wants subprime buyers
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-text-secondary font-medium">Sort by:</span>
+              <select
+                className="px-4 py-2 border border-border rounded-xl bg-surface text-text-primary font-medium focus:outline-none focus:border-text-primary transition-colors"
+                value={filters.sort}
+                onChange={(e) => updateFilters({ sort: e.target.value })}
+              >
+                <option value="created_at_desc">Newest First</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+                <option value="year_desc">Year: Newest</option>
+                <option value="year_asc">Year: Oldest</option>
+                <option value="mileage_asc">Mileage: Low to High</option>
+              </select>
+            </div>
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="bg-white rounded-lg shadow-md p-4 animate-pulse">
-                  <div className="h-48 bg-gray-200 rounded mb-4"></div>
-                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="bg-surface rounded-2xl shadow-card p-6 animate-pulse border border-border-light">
+                  <div className="h-56 bg-background-gray rounded-xl mb-6"></div>
+                  <div className="h-6 bg-background-gray rounded-lg mb-3"></div>
+                  <div className="h-4 bg-background-gray rounded-lg w-3/4 mb-4"></div>
+                  <div className="h-4 bg-background-gray rounded-lg w-1/2 mb-6"></div>
+                  <div className="h-12 bg-background-gray rounded-xl"></div>
                 </div>
               ))}
             </div>
           ) : vehiclesData?.data && vehiclesData.data.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {vehiclesData.data.map((vehicle: any) => (
                   <VehicleCard key={vehicle.vin} vehicle={vehicle} />
                 ))}
@@ -182,17 +226,18 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-primary text-white">
+      <section className="py-20 bg-gradient-to-br from-primary to-primary-hover text-white">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            Ready to Get Behind the Wheel?
+          <h2 className="text-4xl lg:text-5xl font-bold mb-6 leading-tight">
+            Ready to get behind the wheel?
           </h2>
-          <p className="text-xl mb-8">
-            Apply for pre-approval in minutes and drive home today!
+          <p className="text-xl lg:text-2xl mb-10 text-white/90 leading-relaxed">
+            Get pre-approved in minutes and drive home today with easy financing 
+            options for all credit types.
           </p>
-          <Button size="lg" variant="secondary">
+          <button className="bg-white text-primary hover:bg-gray-50 font-bold py-4 px-8 rounded-2xl text-lg transition-all duration-200 shadow-lg hover:shadow-xl">
             Get Pre-Approved Now
-          </Button>
+          </button>
         </div>
       </section>
     </div>

@@ -9,9 +9,9 @@ import { FilterProvider } from "@/contexts/FilterContext";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Auto Leads Directory - Find Your Perfect Vehicle in Memphis, TN",
-  description: "Browse quality pre-owned vehicles from trusted Buy Here Pay Here dealers in Memphis. Easy financing, low down payments, and quick approval for all credit types.",
-  keywords: "buy here pay here, Memphis auto dealers, used cars Memphis, bad credit auto loans, subprime auto financing",
+  title: "The Car Buyer Assistant - Stop Begging Dealerships, Make Them Compete for YOU",
+  description: "We'll share your info with our network of 50+ dealerships who WANT subprime buyers. Watch them fight to earn your business with their best offers.",
+  keywords: "subprime auto financing, bad credit car loans, dealership competition, car buying assistant, Memphis auto financing",
 };
 
 export default function RootLayout({

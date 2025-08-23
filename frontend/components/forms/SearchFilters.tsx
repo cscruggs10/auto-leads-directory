@@ -121,17 +121,20 @@ export function SearchFilters({ onFiltersChange, loading }: SearchFiltersProps) 
   };
 
   return (
-    <div className="bg-surface p-6 rounded-lg shadow-md">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-text-primary">
-          Find Your Perfect Vehicle
+    <div>
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-2xl font-semibold text-text-primary">
+          Tell Us What You Want. We'll Make It Happen.
         </h2>
-        <Button variant="ghost" onClick={handleClearFilters}>
-          Clear All
-        </Button>
+        <button 
+          onClick={handleClearFilters}
+          className="text-text-secondary hover:text-text-primary underline font-medium transition-colors"
+        >
+          Clear all
+        </button>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Region */}
         <Select
           label="Region"
@@ -202,10 +205,18 @@ export function SearchFilters({ onFiltersChange, loading }: SearchFiltersProps) 
       </div>
       
       {/* Search Button for Mobile */}
-      <div className="mt-4 md:hidden">
-        <Button className="w-full" disabled={loading}>
-          {loading ? 'Searching...' : 'Update Results'}
-        </Button>
+      <div className="mt-8 md:hidden">
+        <button 
+          className="w-full bg-primary hover:bg-primary-hover text-white font-semibold py-4 px-6 rounded-2xl transition-colors disabled:opacity-50"
+          disabled={loading}
+        >
+          <div className="flex items-center justify-center space-x-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <span>{loading ? 'Finding Dealerships...' : 'Get Dealerships Competing Now'}</span>
+          </div>
+        </button>
       </div>
     </div>
   );

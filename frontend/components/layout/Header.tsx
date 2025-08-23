@@ -8,13 +8,13 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <header className="bg-surface shadow-sm border-b">
+    <header className="bg-surface shadow-sm border-b border-border-light">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <div className="text-2xl font-bold text-primary">
-              AutoLeads<span className="text-secondary">Directory</span>
+              The Car<span className="text-secondary">Buyer</span> Assistant
             </div>
           </Link>
 

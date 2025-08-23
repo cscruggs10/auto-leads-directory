@@ -1,8 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1';
+import { config } from '@/lib/config';
 
 interface LeadData {
   vehicle_vin: string;
@@ -27,7 +26,7 @@ export function useSubmitLead() {
 
   return useMutation({
     mutationFn: async (leadData: LeadData) => {
-      const response = await axios.post(`${API_BASE_URL}/leads`, leadData);
+      const response = await axios.post(config.api.leads, leadData);
       return response.data;
     },
     onSuccess: (data) => {

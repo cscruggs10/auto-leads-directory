@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1';
+import { config } from '@/lib/config';
 
 interface VehicleFilters {
   page?: number;
@@ -39,7 +38,7 @@ export function useVehicles(filters: VehicleFilters) {
       });
       
       const response = await axios.get<VehiclesResponse>(
-        `${API_BASE_URL}/vehicles?${params.toString()}`
+        `${config.api.vehicles}?${params.toString()}`
       );
       
       return response.data;
@@ -52,7 +51,7 @@ export function useVehicle(vin: string) {
   return useQuery({
     queryKey: ['vehicle', vin],
     queryFn: async () => {
-      const response = await axios.get(`${API_BASE_URL}/vehicles/${vin}`);
+      const response = await axios.get(config.api.vehicleDetail(vin));
       return response.data;
     },
     enabled: !!vin,
@@ -63,7 +62,7 @@ export function useFeaturedVehicles() {
   return useQuery({
     queryKey: ['vehicles', 'featured'],
     queryFn: async () => {
-      const response = await axios.get(`${API_BASE_URL}/vehicles/featured`);
+      const response = await axios.get(config.api.vehiclesFeatured);
       return response.data;
     },
   });

@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1';
+import { config } from '@/lib/config';
 
 interface DealerFilters {
   page?: number;
@@ -23,7 +22,7 @@ export function useDealers(filters: DealerFilters = {}) {
       });
       
       const response = await axios.get(
-        `${API_BASE_URL}/dealers?${params.toString()}`
+        `${config.api.dealers}?${params.toString()}`
       );
       
       return response.data;
@@ -36,7 +35,7 @@ export function useDealer(slug: string) {
   return useQuery({
     queryKey: ['dealer', slug],
     queryFn: async () => {
-      const response = await axios.get(`${API_BASE_URL}/dealers/slug/${slug}`);
+      const response = await axios.get(`${config.api.dealers}/slug/${slug}`);
       return response.data;
     },
     enabled: !!slug,
@@ -47,7 +46,7 @@ export function useDealersByRegion(region: string) {
   return useQuery({
     queryKey: ['dealers', 'region', region],
     queryFn: async () => {
-      const response = await axios.get(`${API_BASE_URL}/dealers/region/${region}`);
+      const response = await axios.get(`${config.api.dealers}/region/${region}`);
       return response.data;
     },
     enabled: !!region,
