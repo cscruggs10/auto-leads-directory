@@ -236,7 +236,7 @@ async function scrapeVehiclesFromHTML($: cheerio.CheerioAPI, baseUrl: string, co
       '.vehicle-card', '.car-card', '.inventory-card'
     ];
     
-    let vehicleElements: cheerio.Cheerio<cheerio.Element> | null = null;
+    let vehicleElements: cheerio.Cheerio<any> | null = null;
     
     for (const selector of possibleSelectors) {
       const elements = $(selector);
