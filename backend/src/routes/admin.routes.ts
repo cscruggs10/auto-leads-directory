@@ -3,6 +3,26 @@ import pool from '../config/database';
 
 const router = Router();
 
+// Manual migration endpoint
+router.post('/migrate', async (req: Request, res: Response) => {
+  try {
+    console.log('🚀 Starting manual migration...');
+    const { runMigrations } = await import('../database/migrate');
+    await runMigrations();
+    res.json({
+      success: true,
+      message: 'Migrations completed successfully'
+    });
+  } catch (error) {
+    console.error('❌ Migration failed:', error);
+    res.status(500).json({
+      success: false,
+      error: (error as Error).message,
+      stack: (error as Error).stack
+    });
+  }
+});
+
 // Debug endpoint to check database connection
 router.get('/debug/db', async (req: Request, res: Response) => {
   try {
