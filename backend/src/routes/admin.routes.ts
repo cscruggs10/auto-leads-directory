@@ -12,7 +12,8 @@ router.get('/debug/db', async (req: Request, res: Response) => {
       res.json({
         database: 'mock',
         USE_MOCK_DB: process.env.USE_MOCK_DB,
-        DATABASE_URL: !!process.env.DATABASE_URL
+        DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'NOT_SET',
+        DATABASE_URL_LENGTH: process.env.DATABASE_URL?.length || 0
       });
     } else {
       // Try to query the actual database
@@ -21,7 +22,8 @@ router.get('/debug/db', async (req: Request, res: Response) => {
         database: 'postgresql',
         dealer_count: result.rows[0].dealer_count,
         USE_MOCK_DB: process.env.USE_MOCK_DB,
-        DATABASE_URL: !!process.env.DATABASE_URL
+        DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'NOT_SET',
+        DATABASE_URL_LENGTH: process.env.DATABASE_URL?.length || 0
       });
     }
   } catch (error) {
