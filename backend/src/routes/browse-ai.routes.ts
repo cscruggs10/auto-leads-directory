@@ -221,6 +221,67 @@ router.post('/dealers/:dealerId/scrape', async (req, res) => {
 });
 
 /**
+ * @route GET /api/v1/browse-ai/debug/:dealerId
+ * @desc Debug endpoint to see raw Browse AI data
+ * @access Admin
+ */
+router.get('/debug/:dealerId', async (req, res) => {
+  const { dealerId } = req.params;
+  
+  try {
+    console.log('🔍 DEBUG: Starting Browse AI debug for dealer', dealerId);
+    
+    // Get dealer configuration
+    const dealerResult = await pool.query(
+      'SELECT name, scraping_config FROM dealers WHERE id = $1',
+      [dealerId]
+    );
+
+    if (dealerResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Dealer not found' });
+    }
+
+    const dealer = dealerResult.rows[0];
+    const browseAIConfig = dealer.scraping_config?.browse_ai || {};
+    
+    if (!browseAIConfig.botId) {
+      return res.status(400).json({ error: 'No Browse AI bot configured for this dealer' });
+    }
+
+    console.log('🔍 DEBUG: Creating task for bot', browseAIConfig.botId);
+    
+    // Create and poll task
+    const taskId = await browseAIService.createTask(browseAIConfig.botId, browseAIConfig.inputParameters);
+    const capturedData = await browseAIService.pollTask(browseAIConfig.botId, taskId, 5); // Quick 5 attempts
+    
+    console.log('🔍 DEBUG: Raw data received:', JSON.stringify(capturedData, null, 2).substring(0, 2000));
+    
+    // Return raw data structure for debugging
+    res.json({
+      success: true,
+      dealer: dealer.name,
+      botId: browseAIConfig.botId,
+      dataStructure: {
+        keys: Object.keys(capturedData),
+        listSizes: Object.entries(capturedData).map(([key, value]) => ({
+          list: key,
+          count: Array.isArray(value) ? value.length : 0,
+          sampleItem: Array.isArray(value) && value.length > 0 ? value[0] : null
+        }))
+      },
+      rawData: capturedData
+    });
+    
+  } catch (error) {
+    console.error('Debug endpoint error:', error);
+    res.status(500).json({ 
+      error: 'Debug failed', 
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
  * @route GET /api/v1/browse-ai/dealers
  * @desc List all dealers with Browse AI configuration status
  * @access Admin
