@@ -1,0 +1,23 @@
+{
+  "name": "auto-leads-directory",
+  "version": "1.0.0",
+  "description": "A comprehensive lead generation platform connecting subprime auto buyers with Buy Here Pay Here dealers in Memphis, TN.",
+  "main": "test-production-browse-ai.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cscruggs10/auto-leads-directory.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cscruggs10/auto-leads-directory/issues"
+  },
+  "homepage": "https://github.com/cscruggs10/auto-leads-directory#readme",
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  }
+}
