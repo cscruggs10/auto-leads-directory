@@ -232,7 +232,7 @@ app.use(errorHandler);
 const server = app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
   
-  // Run migrations if requested
+  // Run migrations if requested OR if Car Choice has no vehicles
   if (process.env.RUN_MIGRATIONS === 'true') {
     console.log('🚀 Running database migrations...');
     try {
@@ -241,6 +241,22 @@ const server = app.listen(PORT, async () => {
       console.log('✅ Database migrations completed successfully');
     } catch (error) {
       console.error('❌ Migration failed:', error);
+    }
+  } else {
+    // Check if Car Choice has vehicles, if not add them
+    try {
+      const pool = (await import('./config/database')).default;
+      const carChoiceCount = await pool.query('SELECT COUNT(*) FROM vehicles WHERE dealer_id = 4');
+      const count = parseInt(carChoiceCount.rows[0].count);
+      
+      if (count === 0) {
+        console.log('🚗 Car Choice has no vehicles, adding them now...');
+        const { seedCarChoiceVehicles } = await import('./database/migrate');
+        await seedCarChoiceVehicles();
+        console.log('✅ Car Choice vehicles added successfully');
+      }
+    } catch (error) {
+      console.error('❌ Car Choice vehicle check failed:', error);
     }
   }
   

@@ -299,6 +299,40 @@ export async function seedInitialData(): Promise<void> {
       console.log(`✅ Inserted vehicle: ${vehicle.year} ${vehicle.make} ${vehicle.model}`);
     }
     
+    // Insert Car Choice vehicles from CSV
+    console.log('🚗 Adding Car Choice vehicles from CSV...');
+    const carChoiceVehicles = [
+      { vin: 'CC2018MIT000001', year: 2018, make: 'Mitsubishi', model: 'Outlander Sport SE 2.4 AWC CVT' },
+      { vin: 'CC2014POR000002', year: 2014, make: 'Porsche', model: 'Panamera 4dr HB' },
+      { vin: 'CC2019MER000003', year: 2019, make: 'Mercedes-Benz', model: 'GLA-Class 4d SUV GLA250 4Matic' },
+      { vin: 'CC2015AUD000004', year: 2015, make: 'Audi', model: 'A6 4d Sedan 2.0T Premium+' },
+      { vin: 'CC2019AUD000005', year: 2019, make: 'Audi', model: 'Q7 SE Premium Plus 55 TFSI quattro' },
+      { vin: 'CC2017BUI000006', year: 2017, make: 'Buick', model: 'Cascada 2d Convertible Premium' },
+      { vin: 'CC2012TOY000007', year: 2012, make: 'Toyota', model: 'Highlander FWD 4dr I4 (Natl)' },
+      { vin: 'CC2017GEN000008', year: 2017, make: 'Genesis', model: 'G90 3.3T Premium AWD' },
+      { vin: 'CC2006BEN000009', year: 2006, make: 'Bentley', model: 'Continental Flying Spur 4d Sedan' },
+      { vin: 'CC2012TOY000010', year: 2012, make: 'Toyota', model: 'Tundra 4WD Double Cab 4.6L' },
+      { vin: 'CC2019FOR000011', year: 2019, make: 'Ford', model: 'Taurus 4d Sedan FWD Limited' },
+      { vin: 'CC2019GEN000012', year: 2019, make: 'Genesis', model: 'G70 2.0T Advanced AWD' },
+      { vin: 'CC2014TOY000013', year: 2014, make: 'Toyota', model: 'Tacoma 2WD Access Cab I4 MT (Natl)' },
+      { vin: 'CC2018HON000014', year: 2018, make: 'Honda', model: 'Accord Sedan 4d LX 1.5L' },
+      { vin: 'CC2017JAG000015', year: 2017, make: 'Jaguar', model: 'F-PACE 4d SUV AWD 35t Prestige' },
+      { vin: 'CC2020MER000016', year: 2020, make: 'Mercedes-Benz', model: 'GLE-Class 4d SUV GLE350 4matic' },
+      { vin: 'CC2018MER000017', year: 2018, make: 'Mercedes-Benz', model: 'GLE-Class 4d SUV Coupe GLE43 AMG 4matic' },
+      { vin: 'CC2016LAN000018', year: 2016, make: 'Land Rover', model: 'Range Rover Sport 4d SUV 3.0L SC SE' },
+      { vin: 'CC2020JEE000019', year: 2020, make: 'Jeep', model: 'Gladiator Sport S 4x4' },
+      { vin: 'CC2016CAD000020', year: 2016, make: 'Cadillac', model: 'XTS 4d Sedan Luxury' }
+    ];
+    
+    for (const vehicle of carChoiceVehicles) {
+      await pool.query(`
+        INSERT INTO vehicles (vin, dealer_id, year, make, model, title, condition, is_available, is_active)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `, [vehicle.vin, 4, vehicle.year, vehicle.make, vehicle.model, `${vehicle.year} ${vehicle.make} ${vehicle.model}`, 'used', true, true]);
+      
+      console.log(`✅ Inserted Car Choice vehicle: ${vehicle.year} ${vehicle.make} ${vehicle.model}`);
+    }
+    
     // Update dealer vehicle counts
     await pool.query(`
       UPDATE dealers SET vehicle_count = (
@@ -310,6 +344,57 @@ export async function seedInitialData(): Promise<void> {
     
   } catch (error) {
     console.error('❌ Seeding failed:', error);
+    throw error;
+  }
+}
+
+export async function seedCarChoiceVehicles(): Promise<void> {
+  console.log('🚗 Adding Car Choice vehicles from CSV...');
+  
+  const carChoiceVehicles = [
+    { vin: 'CC2018MIT000001', year: 2018, make: 'Mitsubishi', model: 'Outlander Sport SE 2.4 AWC CVT' },
+    { vin: 'CC2014POR000002', year: 2014, make: 'Porsche', model: 'Panamera 4dr HB' },
+    { vin: 'CC2019MER000003', year: 2019, make: 'Mercedes-Benz', model: 'GLA-Class 4d SUV GLA250 4Matic' },
+    { vin: 'CC2015AUD000004', year: 2015, make: 'Audi', model: 'A6 4d Sedan 2.0T Premium+' },
+    { vin: 'CC2019AUD000005', year: 2019, make: 'Audi', model: 'Q7 SE Premium Plus 55 TFSI quattro' },
+    { vin: 'CC2017BUI000006', year: 2017, make: 'Buick', model: 'Cascada 2d Convertible Premium' },
+    { vin: 'CC2012TOY000007', year: 2012, make: 'Toyota', model: 'Highlander FWD 4dr I4 (Natl)' },
+    { vin: 'CC2017GEN000008', year: 2017, make: 'Genesis', model: 'G90 3.3T Premium AWD' },
+    { vin: 'CC2006BEN000009', year: 2006, make: 'Bentley', model: 'Continental Flying Spur 4d Sedan' },
+    { vin: 'CC2012TOY000010', year: 2012, make: 'Toyota', model: 'Tundra 4WD Double Cab 4.6L' },
+    { vin: 'CC2019FOR000011', year: 2019, make: 'Ford', model: 'Taurus 4d Sedan FWD Limited' },
+    { vin: 'CC2019GEN000012', year: 2019, make: 'Genesis', model: 'G70 2.0T Advanced AWD' },
+    { vin: 'CC2014TOY000013', year: 2014, make: 'Toyota', model: 'Tacoma 2WD Access Cab I4 MT (Natl)' },
+    { vin: 'CC2018HON000014', year: 2018, make: 'Honda', model: 'Accord Sedan 4d LX 1.5L' },
+    { vin: 'CC2017JAG000015', year: 2017, make: 'Jaguar', model: 'F-PACE 4d SUV AWD 35t Prestige' },
+    { vin: 'CC2020MER000016', year: 2020, make: 'Mercedes-Benz', model: 'GLE-Class 4d SUV GLE350 4matic' },
+    { vin: 'CC2018MER000017', year: 2018, make: 'Mercedes-Benz', model: 'GLE-Class 4d SUV Coupe GLE43 AMG 4matic' },
+    { vin: 'CC2016LAN000018', year: 2016, make: 'Land Rover', model: 'Range Rover Sport 4d SUV 3.0L SC SE' },
+    { vin: 'CC2020JEE000019', year: 2020, make: 'Jeep', model: 'Gladiator Sport S 4x4' },
+    { vin: 'CC2016CAD000020', year: 2016, make: 'Cadillac', model: 'XTS 4d Sedan Luxury' }
+  ];
+  
+  try {
+    for (const vehicle of carChoiceVehicles) {
+      await pool.query(`
+        INSERT INTO vehicles (vin, dealer_id, year, make, model, title, condition, is_available, is_active)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        ON CONFLICT (vin) DO NOTHING
+      `, [vehicle.vin, 4, vehicle.year, vehicle.make, vehicle.model, `${vehicle.year} ${vehicle.make} ${vehicle.model}`, 'used', true, true]);
+      
+      console.log(`✅ Inserted Car Choice vehicle: ${vehicle.year} ${vehicle.make} ${vehicle.model}`);
+    }
+    
+    // Update dealer vehicle counts
+    await pool.query(`
+      UPDATE dealers SET vehicle_count = (
+        SELECT COUNT(*) FROM vehicles WHERE dealer_id = dealers.id AND is_available = true
+      )
+    `);
+    
+    console.log('🚗 Car Choice vehicles added successfully!');
+  } catch (error) {
+    console.error('❌ Failed to add Car Choice vehicles:', error);
     throw error;
   }
 }
