@@ -152,13 +152,26 @@ export class BrowseAIService {
     const capturedData = await this.pollTask(browseAIConfig.botId, taskId);
     
     // Process the captured data using dealer-specific configuration
+    console.log('🔍 Step A: Processing Browse AI data...');
     const processedVehicles = this.processData(capturedData, browseAIConfig);
+    console.log(`🔍 Step B: Processed ${processedVehicles.length} vehicles`);
+    
+    if (processedVehicles.length === 0) {
+      console.log('❌ CRITICAL: No vehicles were processed from Browse AI data!');
+      return [];
+    }
     
     // Store vehicles in database
-    const savedVehicles = await this.saveVehiclesToDatabase(processedVehicles, dealerId);
-    
-    console.log(`✅ Successfully stored ${savedVehicles.length} vehicles in database`);
-    return savedVehicles;
+    console.log('🔍 Step C: Saving vehicles to database...');
+    try {
+      const savedVehicles = await this.saveVehiclesToDatabase(processedVehicles, dealerId);
+      console.log(`✅ Step D: Successfully stored ${savedVehicles.length} vehicles in database`);
+      return savedVehicles;
+    } catch (error) {
+      console.log('❌ EXCEPTION saving to database:', error);
+      console.log('❌ Database error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      throw error;
+    }
   }
 
   /**
@@ -209,20 +222,29 @@ export class BrowseAIService {
         return vehicles;
       }
       
-      console.log(`Processing ${vehicleList.length} vehicles from Browse AI...`);
+      console.log(`🚀 Processing ${vehicleList.length} vehicles from Browse AI...`);
+      console.log(`📝 TESTING MODE: Processing only first 1 vehicle to debug`);
       
-      for (const item of vehicleList) {
+      // TEMPORARY: Process only first vehicle for debugging
+      const testList = vehicleList.slice(0, 1);
+      
+      for (const item of testList) {
         try {
-          console.log('🔍 Processing vehicle item:', JSON.stringify(item, null, 2).substring(0, 300));
+          console.log('🔍 Step 1: Processing vehicle item:', JSON.stringify(item, null, 2).substring(0, 300));
+          
+          console.log('🔍 Step 2: Calling parseVehicleItem...');
           const vehicle = this.parseVehicleItem(item, config);
+          
           if (vehicle) {
+            console.log('🔍 Step 3: Vehicle parsed successfully:', JSON.stringify(vehicle, null, 2).substring(0, 200));
             vehicles.push(vehicle);
-            console.log(`✅ Processed: ${vehicle.year} ${vehicle.make} ${vehicle.model}`);
+            console.log(`✅ Step 4: Added to vehicles array - ${vehicle.year} ${vehicle.make} ${vehicle.model}`);
           } else {
-            console.log('❌ Failed to parse vehicle item - returned null');
+            console.log('❌ Step 3 FAILED: parseVehicleItem returned null');
           }
         } catch (error) {
-          console.log('❌ Error processing vehicle item:', error);
+          console.log('❌ EXCEPTION in processing vehicle item:', error);
+          console.log('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
         }
       }
       
