@@ -1,4 +1,5 @@
 import pool from '../config/database';
+import fetch from 'node-fetch';
 
 interface BrowseAITask {
   id: string;
