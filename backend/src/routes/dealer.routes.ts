@@ -135,27 +135,39 @@ router.get('/execute-sql', async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/v1/dealers/create-vehicle-listings - Convert Car Choice inventory to vehicle listings
+// GET /api/v1/dealers/create-vehicle-listings - Create Car Choice vehicle listings directly
 router.get('/create-vehicle-listings', async (req: Request, res: Response) => {
   try {
-    console.log('🚗 Converting Car Choice inventory to vehicle listings...');
-    
-    // Get all Car Choice inventory data
-    const inventoryResult = await pool.query('SELECT * FROM car_choice_inventory ORDER BY position');
-    
-    if (inventoryResult.rows.length === 0) {
-      return res.status(404).json({ error: 'No Car Choice inventory found' });
-    }
+    console.log('🚗 Creating Car Choice vehicle listings...');
     
     // Clear existing Car Choice vehicles
     await pool.query('DELETE FROM vehicles WHERE dealer_id = 4');
     
+    // Car Choice inventory data from CSV
+    const inventory = [
+      { position: 1, vehicle_info: '2018 Mitsubishi Outlander Sport SE 2.4 AWC CVT', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/26779.jpg' },
+      { position: 2, vehicle_info: '2014 Porsche Panamera 4dr HB', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/22395.jpg' },
+      { position: 3, vehicle_info: '2019 Mercedes-Benz GLA-Class 4d SUV GLA250 4Matic', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/28835.jpg' },
+      { position: 4, vehicle_info: '2015 Audi A6 4d Sedan 2.0T Premium+', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/21748.jpg' },
+      { position: 5, vehicle_info: '2019 Audi Q7 SE Premium Plus 55 TFSI quattro', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/28775.jpg' },
+      { position: 6, vehicle_info: '2017 Buick Cascada 2d Convertible Premium', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/22439.jpg' },
+      { position: 7, vehicle_info: '2012 Toyota Highlander FWD 4dr I4 (Natl)', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/14207.jpg' },
+      { position: 8, vehicle_info: '2017 Genesis G90 3.3T Premium AWD', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/25192.jpg' },
+      { position: 9, vehicle_info: '2006 Bentley Continental Flying Spur 4d Sedan', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/9184.jpg' },
+      { position: 10, vehicle_info: '2012 Toyota Tundra 4WD Double Cab 4.6L', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/14229.jpg' },
+      { position: 11, vehicle_info: '2019 Ford Taurus 4d Sedan FWD Limited', image_url: '' },
+      { position: 12, vehicle_info: '2019 Genesis G70 2.0T Advanced AWD', image_url: '' },
+      { position: 13, vehicle_info: '2014 Toyota Tacoma 2WD Access Cab I4 MT (Natl)', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/17421.jpg' },
+      { position: 14, vehicle_info: '2018 Honda Accord Sedan 4d LX 1.5L', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/27888.jpg' },
+      { position: 15, vehicle_info: '2017 Jaguar F-PACE 4d SUV AWD 35t Prestige', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/23227.jpg' }
+    ];
+    
     let processed = 0;
     
-    for (const item of inventoryResult.rows) {
+    for (const item of inventory) {
       const { position, vehicle_info, image_url } = item;
       
-      // Parse vehicle info (e.g., "2018 Mitsubishi Outlander Sport SE 2.4 AWC CVT")
+      // Parse vehicle info
       const yearMatch = vehicle_info.match(/^(\d{4})/);
       const year = yearMatch ? parseInt(yearMatch[1]) : null;
       
@@ -168,7 +180,7 @@ router.get('/create-vehicle-listings', async (req: Request, res: Response) => {
       if (year && make) {
         const vin = `CC${year}${make.substring(0, 3).toUpperCase()}${String(position).padStart(6, '0')}`;
         
-        // Insert into vehicles table
+        // Insert vehicle
         await pool.query(`
           INSERT INTO vehicles (
             vin, year, make, model, dealer_id, title, 
@@ -177,8 +189,8 @@ router.get('/create-vehicle-listings', async (req: Request, res: Response) => {
           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         `, [vin, year, make, model, 4, vehicle_info, true, true, 'used']);
         
-        // Add vehicle image if available and not placeholder
-        if (image_url && !image_url.includes('onepix.png') && image_url.startsWith('http')) {
+        // Add image if available
+        if (image_url && image_url.startsWith('http') && !image_url.includes('onepix.png')) {
           await pool.query(`
             INSERT INTO vehicle_images (vehicle_vin, image_url, is_primary, created_at)
             VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
