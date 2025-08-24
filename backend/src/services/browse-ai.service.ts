@@ -337,8 +337,8 @@ export class BrowseAIService {
     try {
       console.log('🔧 Parsing vehicle string:', vehicleInfo);
       
-      // Clean the string
-      const cleaned = vehicleInfo.trim();
+      // Clean the string - handle leading/trailing spaces
+      const cleaned = vehicleInfo.replace(/^\s+|\s+$/g, '').replace(/\s+/g, ' ');
       
       // Extract year - look for 4-digit year anywhere in the string
       const yearMatch = cleaned.match(/\b(19|20)\d{2}\b/);
