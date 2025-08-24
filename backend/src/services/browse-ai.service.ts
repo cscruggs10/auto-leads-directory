@@ -236,20 +236,45 @@ export class BrowseAIService {
   }
 
   /**
-   * Parse a vehicle item from Browse AI data (handles both column-based and field-based formats)
+   * Parse a vehicle item from Browse AI data (handles multiple formats)
    */
   private parseVehicleItem(item: any, config: BrowseAIConfig): any | null {
     try {
-      // Check if this is a column-based format (like Car Choice with "Vehicle Info" and "Image" columns)
+      console.log('🔍 Item keys:', Object.keys(item));
+      
+      // Check for various column-based formats
       if (item['Vehicle Info'] || item['Image']) {
+        console.log('📋 Using column-based parser (Vehicle Info + Image)');
         return this.parseColumnBasedVehicle(item);
       }
       
-      // Otherwise, use the standard field mapping approach
+      // Check for other possible column formats
+      const possibleVehicleFields = ['vehicle', 'car', 'listing', 'title', 'name', 'description'];
+      const possibleImageFields = ['image', 'photo', 'picture', 'img'];
+      
+      for (const vField of possibleVehicleFields) {
+        for (const iField of possibleImageFields) {
+          if (item[vField] || item[iField]) {
+            console.log(`📋 Using alternative column parser (${vField} + ${iField})`);
+            return this.parseAlternativeColumnFormat(item, vField, iField);
+          }
+        }
+      }
+      
+      // Try to find any field that looks like vehicle info
+      for (const [key, value] of Object.entries(item)) {
+        if (typeof value === 'string' && this.looksLikeVehicleInfo(value)) {
+          console.log(`📋 Found vehicle info in field '${key}':`, value);
+          return this.parseFromString(value, item);
+        }
+      }
+      
+      // Fall back to standard field mapping
+      console.log('📋 Using standard field mapping');
       return this.mapVehicleData(item, config.fieldMapping);
       
     } catch (error) {
-      console.log('Error parsing vehicle item:', error);
+      console.log('❌ Error parsing vehicle item:', error);
       return null;
     }
   }
@@ -306,66 +331,104 @@ export class BrowseAIService {
   }
 
   /**
-   * Parse vehicle info string like "2018 Mitsubishi Outlander Sport SE 2.4 AWC CVT"
+   * Parse vehicle info string - handles multiple formats
    */
   private parseVehicleInfoString(vehicleInfo: string): any | null {
     try {
+      console.log('🔧 Parsing vehicle string:', vehicleInfo);
+      
       // Clean the string
       const cleaned = vehicleInfo.trim();
       
-      // Extract year (first 4 digits)
-      const yearMatch = cleaned.match(/^\s*(\d{4})\s+/);
+      // Extract year - look for 4-digit year anywhere in the string
+      const yearMatch = cleaned.match(/\b(19|20)\d{2}\b/);
       if (!yearMatch) {
-        console.log('No year found in:', cleaned);
+        console.log('❌ No year found in:', cleaned);
         return null;
       }
       
-      const year = parseInt(yearMatch[1]);
-      let remaining = cleaned.substring(yearMatch[0].length).trim();
+      const year = parseInt(yearMatch[0]);
+      console.log('✅ Found year:', year);
       
-      // Extract make (first word after year)
-      const makeMatch = remaining.match(/^([A-Za-z\-]+)/);
-      if (!makeMatch) {
-        console.log('No make found in:', remaining);
-        return null;
-      }
+      // Extract make - look for car manufacturer names
+      const carMakes = [
+        'Audi', 'BMW', 'Buick', 'Cadillac', 'Chevrolet', 'Chrysler', 'Dodge', 'Ford', 
+        'GMC', 'Honda', 'Hyundai', 'Infiniti', 'Jeep', 'Kia', 'Lexus', 'Lincoln', 
+        'Mazda', 'Mercedes', 'Mitsubishi', 'Nissan', 'Ram', 'Subaru', 'Toyota', 
+        'Volkswagen', 'Volvo', 'Acura'
+      ];
       
-      const make = makeMatch[1];
-      remaining = remaining.substring(makeMatch[0].length).trim();
-      
-      // Extract model and trim (everything else, split intelligently)
-      const parts = remaining.split(/\s+/);
-      if (parts.length === 0) {
-        console.log('No model found');
-        return null;
-      }
-      
-      // First 1-2 words are usually the model
-      let model = parts[0];
-      let trim = '';
-      
-      // Handle multi-word models (like "Outlander Sport")
-      if (parts.length > 1) {
-        // Common model patterns
-        const multiWordModels = ['Outlander Sport', 'Continental Flying', 'Range Rover'];
-        const twoWordModel = `${parts[0]} ${parts[1]}`;
-        
-        if (multiWordModels.some(m => twoWordModel.includes(m)) || 
-            parts[1].match(/^[A-Z][a-z]/)) { // Second word starts with capital
-          model = twoWordModel;
-          trim = parts.slice(2).join(' ');
-        } else {
-          trim = parts.slice(1).join(' ');
+      let make = '';
+      for (const manufacturer of carMakes) {
+        if (cleaned.toLowerCase().includes(manufacturer.toLowerCase())) {
+          make = manufacturer;
+          break;
         }
       }
+      
+      if (!make) {
+        console.log('❌ No make found in:', cleaned);
+        return null;
+      }
+      
+      console.log('✅ Found make:', make);
+      
+      // Extract model - everything after make until common trim/option words
+      const makeIndex = cleaned.toLowerCase().indexOf(make.toLowerCase());
+      let afterMake = cleaned.substring(makeIndex + make.length).trim();
+      
+      // Remove year if it appears after make
+      afterMake = afterMake.replace(/\b(19|20)\d{2}\b/, '').trim();
+      
+      // Split into words
+      const words = afterMake.split(/\s+/).filter(w => w.length > 0);
+      
+      if (words.length === 0) {
+        console.log('❌ No model found after make');
+        return null;
+      }
+      
+      // First 1-3 words are usually the model
+      let model = words[0];
+      let trim = '';
+      
+      // Handle common multi-word models
+      const multiWordModels = [
+        'Outlander Sport', 'Range Rover', 'Continental Flying', 'Town Country',
+        'Grand Cherokee', 'Grand Caravan', 'Santa Fe', 'Land Cruiser'
+      ];
+      
+      if (words.length > 1) {
+        const twoWordModel = `${words[0]} ${words[1]}`;
+        const threeWordModel = words.length > 2 ? `${words[0]} ${words[1]} ${words[2]}` : '';
+        
+        // Check for 3-word models first
+        if (threeWordModel && multiWordModels.some(m => m.toLowerCase() === threeWordModel.toLowerCase())) {
+          model = threeWordModel;
+          trim = words.slice(3).join(' ');
+        }
+        // Check for 2-word models
+        else if (multiWordModels.some(m => m.toLowerCase() === twoWordModel.toLowerCase()) || 
+                 (words[1] && words[1].match(/^[A-Z][a-z]/) && !words[1].match(/^(SE|LE|LX|EX|LT|LS|SL|S|L|XL)$/))) {
+          model = twoWordModel;
+          trim = words.slice(2).join(' ');
+        }
+        // Single word model
+        else {
+          trim = words.slice(1).join(' ');
+        }
+      }
+      
+      console.log('✅ Found model:', model);
+      console.log('✅ Found trim:', trim || '(none)');
       
       return {
         year,
         make,
         model: model.trim(),
         trim: trim.trim() || undefined,
-        mileage: undefined, // Not typically in this format
-        price: undefined,   // Not in this format
+        mileage: undefined,
+        price: undefined,
         color: undefined,
         transmission: undefined,
         engine: undefined,
@@ -373,7 +436,7 @@ export class BrowseAIService {
       };
       
     } catch (error) {
-      console.log('Error parsing vehicle info string:', error);
+      console.log('❌ Error parsing vehicle info string:', error);
       return null;
     }
   }
@@ -489,6 +552,81 @@ export class BrowseAIService {
     }
     
     return photos;
+  }
+
+  /**
+   * Check if a string looks like vehicle information
+   */
+  private looksLikeVehicleInfo(str: string): boolean {
+    const cleaned = str.trim().toLowerCase();
+    
+    // Check for year pattern (4 digits between 1900-2030)
+    const hasYear = /\b(19|20)\d{2}\b/.test(cleaned);
+    
+    // Check for common car makes
+    const carMakes = ['ford', 'chevrolet', 'toyota', 'honda', 'nissan', 'bmw', 'mercedes', 'audi', 'volkswagen', 'hyundai', 'kia', 'mazda', 'subaru', 'jeep', 'ram', 'gmc', 'buick', 'cadillac', 'lexus', 'infiniti', 'acura', 'mitsubishi'];
+    const hasMake = carMakes.some(make => cleaned.includes(make));
+    
+    return hasYear && hasMake && str.length > 10;
+  }
+
+  /**
+   * Parse alternative column format
+   */
+  private parseAlternativeColumnFormat(item: any, vehicleField: string, imageField: string): any | null {
+    const vehicleInfo = item[vehicleField]?.trim() || '';
+    const imageUrl = item[imageField] || '';
+    
+    if (!vehicleInfo) return null;
+    
+    return this.parseFromString(vehicleInfo, { ...item, image: imageUrl });
+  }
+
+  /**
+   * Parse vehicle from any string format
+   */
+  private parseFromString(vehicleStr: string, originalItem: any): any | null {
+    try {
+      const parsed = this.parseVehicleInfoString(vehicleStr);
+      if (!parsed) return null;
+      
+      // Get image from original item if available
+      const photos: string[] = [];
+      const imageFields = ['image', 'Image', 'photo', 'picture', 'img'];
+      
+      for (const field of imageFields) {
+        const imageUrl = originalItem[field];
+        if (imageUrl && 
+            typeof imageUrl === 'string' && 
+            imageUrl.length > 0 &&
+            !imageUrl.includes('onepix.png') &&
+            !imageUrl.includes('placeholder')) {
+          photos.push(imageUrl);
+          break;
+        }
+      }
+      
+      return {
+        vin: this.generateDemoVIN(),
+        year: parsed.year,
+        make: parsed.make,
+        model: parsed.model,
+        trim: parsed.trim,
+        mileage: parsed.mileage,
+        price: parsed.price,
+        down_payment: parsed.price ? Math.min(parsed.price * 0.1, 2000) : 1000,
+        photos,
+        source_url: 'https://www.shopcarchoice.com/car-choice-memphis-inventory',
+        stock_number: parsed.stockNumber,
+        exterior_color: parsed.color,
+        transmission: parsed.transmission,
+        engine: parsed.engine
+      };
+      
+    } catch (error) {
+      console.log('Error parsing from string:', error);
+      return null;
+    }
   }
 
   /**
