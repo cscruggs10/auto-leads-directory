@@ -7,6 +7,7 @@ import vehicleRoutes from './routes/vehicle.routes';
 import dealerRoutes from './routes/dealer.routes';
 import leadRoutes from './routes/lead.routes';
 import adminRoutes from './routes/admin.routes';
+import browseAIRoutes from './routes/browse-ai.routes';
 // import scraperRoutes from './routes/scraper.routes';
 import { errorHandler } from './middleware/error.middleware';
 // import { setupCronJobs } from './services/cron.service';
@@ -94,6 +95,7 @@ app.use('/api/v1/vehicles', vehicleRoutes);
 app.use('/api/v1/dealers', dealerRoutes);
 app.use('/api/v1/leads', leadRoutes);
 app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/browse-ai', browseAIRoutes);
 // app.use('/api/v1/scraper', scraperRoutes);
 
 // 404 handler

@@ -177,6 +177,71 @@ router.get('/dealers', async (req: Request, res: Response) => {
   }
 });
 
+// Configure Browse AI bot for dealer
+router.put('/dealers/:id/bot', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { browse_ai_bot_id } = req.body;
+
+    if (!browse_ai_bot_id) {
+      return res.status(400).json({ error: 'browse_ai_bot_id is required' });
+    }
+
+    const result = await pool.query(`
+      UPDATE dealers 
+      SET scraping_config = COALESCE(scraping_config, '{}')::jsonb || $1::jsonb,
+          updated_at = NOW() 
+      WHERE id = $2 
+      RETURNING *
+    `, [JSON.stringify({ browse_ai_bot_id }), id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Dealer not found' });
+    }
+
+    res.json({
+      success: true,
+      message: `Browse AI bot ${browse_ai_bot_id} configured for dealer ${id}`,
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error('Error configuring Browse AI bot:', error);
+    res.status(500).json({ error: 'Failed to configure bot' });
+  }
+});
+
+// Update dealer website URL
+router.put('/dealers/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { website_url } = req.body;
+
+    if (!website_url) {
+      return res.status(400).json({ error: 'website_url is required' });
+    }
+
+    const result = await pool.query(
+      'UPDATE dealers SET website_url = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+      [website_url, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Dealer not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Dealer updated successfully',
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error('Error updating dealer:', error);
+    res.status(500).json({ error: 'Failed to update dealer' });
+  }
+});
+
 // Clean up test data - keep only real dealers
 router.post('/cleanup', async (req: Request, res: Response) => {
   try {

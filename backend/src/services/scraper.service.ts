@@ -1,6 +1,7 @@
 import https from 'https';
 import http from 'http';
 import pool from '../config/database';
+import { browseAIService } from './browse-ai.service';
 
 interface ScrapedVehicle {
   vin: string;
@@ -46,6 +47,182 @@ export async function scrapeAllDealers(): Promise<void> {
   }
 }
 
+// Helper function to fetch data using Browse AI bot specific to each dealer
+async function fetchWithBrowseAI(dealerId: number): Promise<any[]> {
+  const useBrowseAI = process.env.BROWSE_AI_API_KEY && process.env.BROWSE_AI_ENABLED === 'true';
+  
+  if (!useBrowseAI) {
+    throw new Error('Browse AI is not configured');
+  }
+
+  try {
+    // Get dealer's Browse AI bot ID from database
+    const dealerResult = await pool.query(
+      'SELECT scraping_config FROM dealers WHERE id = $1',
+      [dealerId]
+    );
+
+    if (dealerResult.rows.length === 0) {
+      throw new Error(`Dealer ${dealerId} not found`);
+    }
+
+    const scrapingConfig = dealerResult.rows[0].scraping_config || {};
+    const botId = scrapingConfig.browse_ai_bot_id;
+
+    if (!botId) {
+      throw new Error(`No Browse AI bot configured for dealer ${dealerId}. Please configure bot first.`);
+    }
+
+    console.log(`🤖 Using Browse AI bot ${botId} for dealer ${dealerId}...`);
+
+    // Start Browse AI task
+    const taskResponse = await fetch(`https://api.browse.ai/v2/robots/${botId}/tasks`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.BROWSE_AI_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        inputParameters: {}
+      })
+    });
+
+    if (!taskResponse.ok) {
+      const errorText = await taskResponse.text();
+      throw new Error(`Browse AI task creation failed: ${taskResponse.status} ${errorText}`);
+    }
+
+    const taskData = await taskResponse.json() as any;
+    const taskId = taskData.result.id;
+    console.log(`📋 Browse AI task created: ${taskId}`);
+
+    // Poll for task completion
+    return await pollBrowseAITask(botId, taskId);
+
+  } catch (error) {
+    console.error('Browse AI error:', error);
+    throw error;
+  }
+}
+
+// Poll Browse AI task until completion
+async function pollBrowseAITask(botId: string, taskId: string): Promise<any[]> {
+  const maxAttempts = 30; // 5 minutes max (10 second intervals)
+  
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    console.log(`🔄 Polling Browse AI task ${taskId} (attempt ${attempt}/${maxAttempts})...`);
+    
+    const response = await fetch(`https://api.browse.ai/v2/robots/${botId}/tasks/${taskId}`, {
+      headers: {
+        'Authorization': `Bearer ${process.env.BROWSE_AI_API_KEY}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Browse AI task polling failed: ${response.status}`);
+    }
+
+    const data = await response.json() as any;
+    const status = data.result.status;
+
+    if (status === 'successful') {
+      console.log(`✅ Browse AI task completed successfully`);
+      return data.result.capturedLists || {};
+    } else if (status === 'failed') {
+      throw new Error(`Browse AI task failed: ${data.result.error?.message || 'Unknown error'}`);
+    } else if (status === 'cancelled') {
+      throw new Error('Browse AI task was cancelled');
+    }
+
+    // Still running, wait before next poll
+    await new Promise(resolve => setTimeout(resolve, 10000)); // 10 second intervals
+  }
+
+  throw new Error('Browse AI task timed out after 5 minutes');
+}
+
+// Process Browse AI captured data into vehicle format
+async function processBrowseAIData(browseAIData: any, baseUrl: string, config: any): Promise<ScrapedVehicle[]> {
+  const vehicles: ScrapedVehicle[] = [];
+  
+  try {
+    console.log('Processing Browse AI captured data...');
+    
+    // Browse AI returns capturedLists object with named lists
+    // The exact structure depends on how you configure your Browse AI bot
+    
+    // Example: assuming your bot captures a list called "vehicles"
+    const vehicleList = browseAIData.vehicles || browseAIData.inventory || browseAIData.cars || [];
+    
+    if (!Array.isArray(vehicleList)) {
+      console.log('No vehicle list found in Browse AI data');
+      return vehicles;
+    }
+    
+    console.log(`Processing ${vehicleList.length} vehicles from Browse AI...`);
+    
+    for (const item of vehicleList) {
+      try {
+        // Extract vehicle information from Browse AI captured fields
+        // These field names will match what you configure in your Browse AI bot
+        const year = parseInt(item.year || item.model_year || extractYear(item.title || ''));
+        const make = item.make || item.brand || extractMake(item.title || '');
+        const model = item.model || extractModel(item.title || '', make);
+        
+        // Extract pricing - Browse AI might capture this as text that needs parsing
+        let price: number | undefined;
+        if (item.price) {
+          const priceStr = item.price.toString().replace(/[^0-9.]/g, '');
+          price = priceStr ? parseFloat(priceStr) : undefined;
+        }
+        
+        // Extract mileage
+        let mileage: number | undefined;
+        if (item.mileage || item.miles) {
+          const mileageStr = (item.mileage || item.miles).toString().replace(/[^0-9]/g, '');
+          mileage = mileageStr ? parseInt(mileageStr) : undefined;
+        }
+        
+        // Generate VIN (Browse AI might capture actual VIN if available)
+        const vin = item.vin || generateDemoVIN();
+        
+        if (year && make && model) {
+          const vehicle: ScrapedVehicle = {
+            vin,
+            year,
+            make: make.trim(),
+            model: model.trim(),
+            price,
+            mileage,
+            down_payment: price ? Math.min(price * 0.1, 2000) : 1000,
+            photos: item.images ? (Array.isArray(item.images) ? item.images : [item.images]) : [],
+            source_url: item.url || item.link || baseUrl,
+            stock_number: item.stock_number || item.stock || undefined,
+            exterior_color: item.color || item.exterior_color || undefined,
+            interior_color: item.interior_color || undefined,
+            transmission: item.transmission || undefined,
+            engine: item.engine || undefined
+          };
+          
+          vehicles.push(vehicle);
+          console.log(`Processed Browse AI vehicle: ${year} ${make} ${model}${price ? ` - $${price}` : ''}${mileage ? ` (${mileage.toLocaleString()} mi)` : ''}`);
+        } else {
+          console.log('Skipping incomplete vehicle data from Browse AI:', item);
+        }
+      } catch (error) {
+        console.log('Error processing Browse AI vehicle item:', error);
+      }
+    }
+    
+    console.log(`Successfully processed ${vehicles.length} vehicles from Browse AI`);
+    return vehicles;
+    
+  } catch (error) {
+    console.error('Error processing Browse AI data:', error);
+    return vehicles;
+  }
+}
+
 // Helper function to fetch HTML - uses ScrapingBee for JavaScript rendering
 async function fetchHtml(url: string): Promise<string> {
   const useScrapingBee = process.env.SCRAPINGBEE_API_KEY && process.env.SCRAPING_ENABLED === 'true';
@@ -58,9 +235,21 @@ async function fetchHtml(url: string): Promise<string> {
     scrapingBeeUrl.searchParams.append('api_key', process.env.SCRAPINGBEE_API_KEY!);
     scrapingBeeUrl.searchParams.append('url', url);
     scrapingBeeUrl.searchParams.append('render_js', 'true');
-    scrapingBeeUrl.searchParams.append('wait', '5000'); // Wait 5 seconds for JS to load
+    scrapingBeeUrl.searchParams.append('wait', '3000'); // Initial wait for page load
     scrapingBeeUrl.searchParams.append('block_ads', 'true');
     scrapingBeeUrl.searchParams.append('block_resources', 'false');
+    
+    // Use ScrapingBee's JavaScript scenario to handle "Load Next Page" buttons
+    const jsScenario = {
+      "instructions": [
+        {"wait": 3000},
+        {
+          "evaluate": "(async()=>{let maxClicks=15; for(let i=0; i<maxClicks; i++){let btn=null; let selectors=[...document.querySelectorAll('button')].filter(b=>b.textContent.includes('Load Next Page')||b.textContent.includes('Load More')); if(selectors.length>0) btn=selectors[0]; else btn=document.querySelector('.load-more, [data-testid=\"load-more\"], #load-more'); if(!btn||getComputedStyle(btn).display==='none'||btn.disabled) break; btn.scrollIntoView(); btn.click(); await new Promise(r=>setTimeout(r,2000)); window.scrollBy(0,500);} })();"
+        },
+        {"wait": 5000}
+      ]
+    };
+    scrapingBeeUrl.searchParams.append('js_scenario', JSON.stringify(jsScenario));
     
     try {
       const response = await fetch(scrapingBeeUrl.toString());
@@ -145,13 +334,32 @@ export async function scrapeDealerInventory(dealerId: number): Promise<void> {
     );
     const logId = logResult.rows[0].id;
     
-    console.log(`Fetching ${dealer.website_url}`);
+    let vehicles: ScrapedVehicle[] = [];
     
-    // Fetch the page with Node.js built-in modules
-    const htmlContent = await fetchHtml(dealer.website_url);
+    // Check if Browse AI is enabled and bot is configured for this dealer
+    const useBrowseAI = process.env.BROWSE_AI_ENABLED === 'true' && 
+      (config.browse_ai?.botId || config.browse_ai_bot_id);
     
-    // Scrape vehicles from the HTML using regex parsing
-    const vehicles = await scrapeVehiclesFromHTML(htmlContent, dealer.website_url, config);
+    if (useBrowseAI) {
+      console.log(`Using Browse AI service for dealer ${dealerId}`);
+      
+      try {
+        // Use the new Browse AI service
+        vehicles = await browseAIService.scrapeDealer(dealerId);
+      } catch (error) {
+        console.error('Browse AI service error, falling back to legacy method:', error);
+        // Fallback to legacy Browse AI method
+        const browseAIData = await fetchWithBrowseAI(dealerId);
+        vehicles = await processBrowseAIData(browseAIData, dealer.website_url, config);
+      }
+      
+    } else {
+      console.log(`Fetching ${dealer.website_url} using fallback scraper`);
+      
+      // Fallback to ScrapingBee/HTML scraping
+      const htmlContent = await fetchHtml(dealer.website_url);
+      vehicles = await scrapeVehiclesFromHTML(htmlContent, dealer.website_url, config);
+    }
     
     console.log(`Found ${vehicles.length} vehicles for dealer ${dealerId}`);
     
