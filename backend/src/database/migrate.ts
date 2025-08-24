@@ -146,6 +146,42 @@ export async function seedInitialData(): Promise<void> {
           sunday: '11:00-18:00'
         },
         services: ['financing', 'low_down_payments', 'trade_ins', 'warranties']
+      },
+      {
+        name: 'Car Choice',
+        slug: 'car-choice',
+        city: 'Memphis',
+        state: 'TN',
+        address: '1234 Car Choice Blvd, Memphis, TN 38118',
+        phone: '(901) 555-0404',
+        email: 'sales@shopcarchoice.com',
+        website_url: 'https://www.shopcarchoice.com',
+        logo_url: '/images/dealers/car-choice.jpg',
+        average_rating: 4.3,
+        total_reviews: 156,
+        description: 'Your premier destination for quality pre-owned vehicles with Browse AI integration',
+        scraping_enabled: true,
+        license_number: 'TN-D45678',
+        business_hours: {
+          monday: '9:00-19:00',
+          tuesday: '9:00-19:00',
+          wednesday: '9:00-19:00',
+          thursday: '9:00-19:00',
+          friday: '9:00-19:00',
+          saturday: '9:00-18:00',
+          sunday: '12:00-17:00'
+        },
+        services: ['financing', 'browse_ai_inventory', 'trade_ins', 'warranties'],
+        scraping_config: {
+          browse_ai: {
+            botId: '0198dc74-5ba6-7637-b1b0-b68de2a5e2bc',
+            listName: 'Car Choice Inventory',
+            inputParameters: {
+              originUrl: 'https://www.shopcarchoice.com/car-choice-memphis-inventory',
+              car_choice_inventory_limit: 100
+            }
+          }
+        }
       }
     ];
     
@@ -156,15 +192,16 @@ export async function seedInitialData(): Promise<void> {
         INSERT INTO dealers (
           name, slug, city, state, address, phone, email, website_url, logo_url,
           average_rating, total_reviews, description, scraping_enabled, 
-          license_number, business_hours, services
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+          license_number, business_hours, services, scraping_config
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
         RETURNING id
       `, [
         dealer.name, dealer.slug, dealer.city, dealer.state, dealer.address,
         dealer.phone, dealer.email, dealer.website_url, dealer.logo_url,
         dealer.average_rating, dealer.total_reviews, dealer.description,
         dealer.scraping_enabled, dealer.license_number,
-        JSON.stringify(dealer.business_hours), JSON.stringify(dealer.services)
+        JSON.stringify(dealer.business_hours), JSON.stringify(dealer.services),
+        JSON.stringify(dealer.scraping_config || {})
       ]);
       
       dealerIds.push(result.rows[0].id);

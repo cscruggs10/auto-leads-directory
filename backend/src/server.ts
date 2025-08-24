@@ -82,12 +82,33 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Health check endpoint
-app.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({ 
-    status: 'healthy', 
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV 
-  });
+app.get('/health', async (req: Request, res: Response) => {
+  try {
+    const pool = (await import('./config/database')).default;
+    
+    // Check database connection
+    const dbResult = await pool.query('SELECT COUNT(*) FROM dealers');
+    const dealerCount = parseInt(dbResult.rows[0].count);
+    
+    res.status(200).json({ 
+      status: 'healthy', 
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      hasApiKey: !!process.env.BROWSE_AI_API_KEY,
+      hasDatabase: true,
+      dealerCount: dealerCount,
+      migrationsRun: dealerCount > 0
+    });
+  } catch (error) {
+    res.status(200).json({ 
+      status: 'healthy', 
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      hasApiKey: !!process.env.BROWSE_AI_API_KEY,
+      hasDatabase: false,
+      error: 'Database connection failed'
+    });
+  }
 });
 
 // API routes

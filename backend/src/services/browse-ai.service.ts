@@ -223,12 +223,8 @@ export class BrowseAIService {
       }
       
       console.log(`🚀 Processing ${vehicleList.length} vehicles from Browse AI...`);
-      console.log(`📝 TESTING MODE: Processing only first 1 vehicle to debug`);
       
-      // TEMPORARY: Process only first vehicle for debugging
-      const testList = vehicleList.slice(0, 1);
-      
-      for (const item of testList) {
+      for (const item of vehicleList) {
         try {
           console.log('🔍 Step 1: Processing vehicle item:', JSON.stringify(item, null, 2).substring(0, 300));
           
