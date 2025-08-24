@@ -177,7 +177,7 @@ export class BrowseAIService {
   /**
    * Process Browse AI captured data into standardized vehicle format
    */
-  private processData(capturedData: any, config: BrowseAIConfig): any[] {
+  processData(capturedData: any, config: BrowseAIConfig): any[] {
     const vehicles: any[] = [];
     
     try {
@@ -662,7 +662,7 @@ export class BrowseAIService {
   /**
    * Save processed vehicles to the database
    */
-  private async saveVehiclesToDatabase(vehicles: any[], dealerId: number): Promise<any[]> {
+  async saveVehiclesToDatabase(vehicles: any[], dealerId: number): Promise<any[]> {
     const savedVehicles: any[] = [];
     
     console.log(`💾 Saving ${vehicles.length} vehicles to database for dealer ${dealerId}...`);

@@ -282,6 +282,70 @@ router.get('/debug/:dealerId', async (req, res) => {
 });
 
 /**
+ * @route POST /api/v1/browse-ai/webhook
+ * @desc Webhook endpoint for Browse AI task completion
+ * @access Browse AI
+ */
+router.post('/webhook', async (req, res) => {
+  try {
+    console.log('🎣 Browse AI webhook received:', JSON.stringify(req.body, null, 2));
+    
+    const { task, robot } = req.body;
+    
+    if (!task || task.status !== 'successful') {
+      console.log('⚠️ Webhook received but task not successful:', task?.status);
+      return res.status(200).json({ message: 'Task not successful, ignoring' });
+    }
+    
+    console.log('✅ Browse AI task completed successfully!');
+    console.log('🤖 Bot ID:', robot?.id);
+    console.log('📋 Task ID:', task?.id);
+    console.log('📊 Captured Lists:', Object.keys(task?.capturedLists || {}));
+    
+    // Find dealer by bot ID
+    const dealerResult = await pool.query(
+      `SELECT id, name, scraping_config FROM dealers 
+       WHERE scraping_config->>'browse_ai'->>'botId' = $1 
+       OR scraping_config->>'browse_ai_bot_id' = $1`,
+      [robot?.id]
+    );
+    
+    if (dealerResult.rows.length === 0) {
+      console.log('⚠️ No dealer found for bot ID:', robot?.id);
+      return res.status(200).json({ message: 'Dealer not found' });
+    }
+    
+    const dealer = dealerResult.rows[0];
+    console.log(`🏪 Processing for dealer: ${dealer.name} (ID: ${dealer.id})`);
+    
+    // Process the captured data
+    const browseAIConfig = dealer.scraping_config?.browse_ai || {};
+    const capturedData = task.capturedLists || {};
+    
+    console.log('🔄 Processing captured data...');
+    const processedVehicles = await browseAIService.processData(capturedData, browseAIConfig);
+    
+    if (processedVehicles.length > 0) {
+      console.log(`💾 Saving ${processedVehicles.length} vehicles to database...`);
+      const savedVehicles = await browseAIService.saveVehiclesToDatabase(processedVehicles, dealer.id);
+      console.log(`✅ Webhook processing complete: ${savedVehicles.length} vehicles saved`);
+    } else {
+      console.log('❌ No vehicles were processed from webhook data');
+    }
+    
+    res.status(200).json({ 
+      success: true,
+      message: 'Webhook processed successfully',
+      vehiclesProcessed: processedVehicles.length
+    });
+    
+  } catch (error) {
+    console.error('❌ Webhook processing error:', error);
+    res.status(500).json({ error: 'Webhook processing failed' });
+  }
+});
+
+/**
  * @route GET /api/v1/browse-ai/dealers
  * @desc List all dealers with Browse AI configuration status
  * @access Admin
