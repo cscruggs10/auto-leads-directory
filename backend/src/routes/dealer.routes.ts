@@ -189,14 +189,7 @@ router.get('/create-vehicle-listings', async (req: Request, res: Response) => {
           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         `, [vin, year, make, model, 4, vehicle_info, true, true, 'used']);
         
-        // Add image if available
-        if (image_url && image_url.startsWith('http') && !image_url.includes('onepix.png')) {
-          await pool.query(`
-            INSERT INTO vehicle_images (vehicle_vin, image_url, is_primary, created_at)
-            VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
-            ON CONFLICT (vehicle_vin, image_url) DO NOTHING
-          `, [vin, image_url, true]);
-        }
+        // Skip images for now to avoid table issues
         
         processed++;
       }
