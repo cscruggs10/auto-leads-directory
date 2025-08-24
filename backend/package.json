@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --watch src --ext ts --exec ts-node src/server.ts",
+    "dev:minimal": "nodemon --watch src --ext ts --exec ts-node src/server-minimal.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "start:minimal": "node dist/server-minimal.js",
     "migrate": "ts-node src/database/migrate.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -17,7 +19,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/node": "^24.2.1",
-    "@types/node-fetch": "^2.6.13",
+    "@types/node-fetch": "^2.6.11",
     "@types/pg": "^8.15.5",
     "axios": "^1.11.0",
     "bcryptjs": "^3.0.2",
@@ -30,7 +32,7 @@
     "joi": "^18.0.0",
     "jsonwebtoken": "^9.0.2",
     "node-cron": "^4.2.1",
-    "node-fetch": "^3.3.2",
+    "node-fetch": "^2.7.0",
     "pg": "^8.16.3",
     "tailwind-merge": "^3.3.1",
     "typescript": "^5.9.2"
