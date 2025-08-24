@@ -40,7 +40,8 @@ const allowedOrigins = [
   'http://localhost:3001',
   'https://frontend-7d4mck485-corey-scruggs-projects.vercel.app',
   'https://frontend-eqno5gq5d-corey-scruggs-projects.vercel.app',
-  'https://frontend-owtmxpjmu-corey-scruggs-projects.vercel.app'
+  'https://frontend-owtmxpjmu-corey-scruggs-projects.vercel.app',
+  'https://frontend-ec6yiaciq-corey-scruggs-projects.vercel.app'
 ].filter(Boolean);
 
 app.use(cors({
