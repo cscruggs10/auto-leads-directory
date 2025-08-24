@@ -135,78 +135,33 @@ router.get('/execute-sql', async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/v1/dealers/create-vehicle-listings - Create Car Choice vehicle listings directly
-router.get('/create-vehicle-listings', async (req: Request, res: Response) => {
+// GET /api/v1/dealers/add-car-choice - Add Car Choice vehicles directly
+router.get('/add-car-choice', async (req: Request, res: Response) => {
   try {
-    console.log('🚗 Creating Car Choice vehicle listings...');
+    console.log('🚗 Adding Car Choice vehicles...');
     
-    // Clear existing Car Choice vehicles
-    await pool.query('DELETE FROM vehicles WHERE dealer_id = 4');
+    // Just add a few test vehicles first
+    await pool.query(`
+      INSERT INTO vehicles (vin, year, make, model, dealer_id, title, is_active, is_available, condition, created_at, updated_at) VALUES
+      ('CC2018MIT000001', 2018, 'Mitsubishi', 'Outlander Sport SE 2.4 AWC CVT', 4, '2018 Mitsubishi Outlander Sport SE 2.4 AWC CVT', true, true, 'used', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      ('CC2014POR000002', 2014, 'Porsche', 'Panamera 4dr HB', 4, '2014 Porsche Panamera 4dr HB', true, true, 'used', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      ('CC2019MER000003', 2019, 'Mercedes-Benz', 'GLA-Class 4d SUV GLA250 4Matic', 4, '2019 Mercedes-Benz GLA-Class 4d SUV GLA250 4Matic', true, true, 'used', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      ('CC2015AUD000004', 2015, 'Audi', 'A6 4d Sedan 2.0T Premium+', 4, '2015 Audi A6 4d Sedan 2.0T Premium+', true, true, 'used', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+      ('CC2019AUD000005', 2019, 'Audi', 'Q7 SE Premium Plus 55 TFSI quattro', 4, '2019 Audi Q7 SE Premium Plus 55 TFSI quattro', true, true, 'used', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      ON CONFLICT (vin) DO NOTHING
+    `);
     
-    // Car Choice inventory data from CSV
-    const inventory = [
-      { position: 1, vehicle_info: '2018 Mitsubishi Outlander Sport SE 2.4 AWC CVT', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/26779.jpg' },
-      { position: 2, vehicle_info: '2014 Porsche Panamera 4dr HB', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/22395.jpg' },
-      { position: 3, vehicle_info: '2019 Mercedes-Benz GLA-Class 4d SUV GLA250 4Matic', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/28835.jpg' },
-      { position: 4, vehicle_info: '2015 Audi A6 4d Sedan 2.0T Premium+', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/21748.jpg' },
-      { position: 5, vehicle_info: '2019 Audi Q7 SE Premium Plus 55 TFSI quattro', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/28775.jpg' },
-      { position: 6, vehicle_info: '2017 Buick Cascada 2d Convertible Premium', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/22439.jpg' },
-      { position: 7, vehicle_info: '2012 Toyota Highlander FWD 4dr I4 (Natl)', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/14207.jpg' },
-      { position: 8, vehicle_info: '2017 Genesis G90 3.3T Premium AWD', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/25192.jpg' },
-      { position: 9, vehicle_info: '2006 Bentley Continental Flying Spur 4d Sedan', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/9184.jpg' },
-      { position: 10, vehicle_info: '2012 Toyota Tundra 4WD Double Cab 4.6L', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/14229.jpg' },
-      { position: 11, vehicle_info: '2019 Ford Taurus 4d Sedan FWD Limited', image_url: '' },
-      { position: 12, vehicle_info: '2019 Genesis G70 2.0T Advanced AWD', image_url: '' },
-      { position: 13, vehicle_info: '2014 Toyota Tacoma 2WD Access Cab I4 MT (Natl)', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/17421.jpg' },
-      { position: 14, vehicle_info: '2018 Honda Accord Sedan 4d LX 1.5L', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/27888.jpg' },
-      { position: 15, vehicle_info: '2017 Jaguar F-PACE 4d SUV AWD 35t Prestige', image_url: 'https://media.chromedata.com/autoBuilderData/stockPhotos/23227.jpg' }
-    ];
-    
-    let processed = 0;
-    
-    for (const item of inventory) {
-      const { position, vehicle_info, image_url } = item;
-      
-      // Parse vehicle info
-      const yearMatch = vehicle_info.match(/^(\d{4})/);
-      const year = yearMatch ? parseInt(yearMatch[1]) : null;
-      
-      const remaining = vehicle_info.substring(4).trim();
-      const makeMatch = remaining.match(/^(\w+)/);
-      const make = makeMatch ? makeMatch[1] : 'Unknown';
-      
-      const model = remaining.substring(make.length).trim() || 'Unknown';
-      
-      if (year && make) {
-        const vin = `CC${year}${make.substring(0, 3).toUpperCase()}${String(position).padStart(6, '0')}`;
-        
-        // Insert vehicle
-        await pool.query(`
-          INSERT INTO vehicles (
-            vin, year, make, model, dealer_id, title, 
-            is_active, is_available, condition, 
-            created_at, updated_at
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        `, [vin, year, make, model, 4, vehicle_info, true, true, 'used']);
-        
-        // Skip images for now to avoid table issues
-        
-        processed++;
-      }
-    }
-    
-    // Get final count
     const vehicleCount = await pool.query('SELECT COUNT(*) FROM vehicles WHERE dealer_id = 4');
     
     return res.json({
       success: true,
-      message: `Created ${processed} vehicle listings for Car Choice`,
+      message: 'Added Car Choice vehicles',
       totalVehicles: parseInt(vehicleCount.rows[0].count)
     });
     
   } catch (error) {
-    console.error('Vehicle listing creation error:', error);
-    return res.status(500).json({ error: 'Failed to create vehicle listings', details: error.message });
+    console.error('Error adding vehicles:', error);
+    return res.status(500).json({ error: 'Failed to add vehicles', details: error.message });
   }
 });
 
