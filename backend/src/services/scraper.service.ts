@@ -46,42 +46,75 @@ export async function scrapeAllDealers(): Promise<void> {
   }
 }
 
-// Helper function to fetch HTML using Node.js built-in modules
+// Helper function to fetch HTML - uses ScrapingBee for JavaScript rendering
 async function fetchHtml(url: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const client = url.startsWith('https:') ? https : http;
+  const useScrapingBee = process.env.SCRAPINGBEE_API_KEY && process.env.SCRAPING_ENABLED === 'true';
+  
+  if (useScrapingBee) {
+    // Use ScrapingBee for JavaScript-rendered content
+    console.log('🐝 Using ScrapingBee for JavaScript rendering...');
     
-    const options = {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Connection': 'keep-alive',
-      },
-      timeout: 30000
-    };
+    const scrapingBeeUrl = new URL('https://app.scrapingbee.com/api/v1/');
+    scrapingBeeUrl.searchParams.append('api_key', process.env.SCRAPINGBEE_API_KEY!);
+    scrapingBeeUrl.searchParams.append('url', url);
+    scrapingBeeUrl.searchParams.append('render_js', 'true');
+    scrapingBeeUrl.searchParams.append('wait', '5000'); // Wait 5 seconds for JS to load
+    scrapingBeeUrl.searchParams.append('block_ads', 'true');
+    scrapingBeeUrl.searchParams.append('block_resources', 'false');
     
-    const req = client.get(url, options, (res) => {
-      let data = '';
+    try {
+      const response = await fetch(scrapingBeeUrl.toString());
       
-      res.on('data', (chunk) => {
-        data += chunk;
+      if (!response.ok) {
+        console.error(`ScrapingBee error: ${response.status} ${response.statusText}`);
+        throw new Error(`ScrapingBee API error: ${response.status}`);
+      }
+      
+      const html = await response.text();
+      console.log(`✅ ScrapingBee successfully fetched ${html.length} characters`);
+      return html;
+    } catch (error) {
+      console.error('ScrapingBee error:', error);
+      throw error;
+    }
+  } else {
+    // Fallback to basic HTTP fetch (no JavaScript support)
+    console.log('Using basic HTTP fetch (no JavaScript support)...');
+    return new Promise((resolve, reject) => {
+      const client = url.startsWith('https:') ? https : http;
+      
+      const options = {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Connection': 'keep-alive',
+        },
+        timeout: 30000
+      };
+      
+      const req = client.get(url, options, (res) => {
+        let data = '';
+        
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        
+        res.on('end', () => {
+          resolve(data);
+        });
       });
       
-      res.on('end', () => {
-        resolve(data);
+      req.on('error', (err) => {
+        reject(err);
+      });
+      
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error('Request timeout'));
       });
     });
-    
-    req.on('error', (err) => {
-      reject(err);
-    });
-    
-    req.on('timeout', () => {
-      req.destroy();
-      reject(new Error('Request timeout'));
-    });
-  });
+  }
 }
 
 export async function scrapeDealerInventory(dealerId: number): Promise<void> {
@@ -277,7 +310,7 @@ async function scrapeVehiclesFromHTML(html: string, baseUrl: string, config: any
             await processJsonLdVehicle(vehicleData, baseUrl, vehicles);
           }
         } catch (e) {
-          console.log('JSON-LD parsing error:', e.message);
+          console.log('JSON-LD parsing error:', (e as Error).message);
           // Not valid JSON-LD, continue
         }
       }
@@ -377,15 +410,15 @@ async function processJsonLdVehicle(vehicleData: any, baseUrl: string, vehicles:
     const vin = vehicleData.vehicleIdentificationNumber || generateDemoVIN();
     
     // Extract pricing
-    let price = null;
+    let price = undefined;
     if (vehicleData.offers && vehicleData.offers.price) {
       price = parseFloat(vehicleData.offers.price.replace(/[^0-9.]/g, ''));
     } else if (vehicleData.price) {
       price = parseFloat(vehicleData.price.replace(/[^0-9.]/g, ''));
     }
     
-    // Extract mileage
-    let mileage = null;
+    // Extract mileage  
+    let mileage = undefined;
     if (vehicleData.mileageFromOdometer) {
       mileage = parseInt(vehicleData.mileageFromOdometer.value || vehicleData.mileageFromOdometer);
     }
@@ -416,7 +449,7 @@ async function processJsonLdVehicle(vehicleData: any, baseUrl: string, vehicles:
       console.log(`Extracted JSON-LD vehicle: ${year} ${make} ${model}${price ? ` - $${price}` : ''}${mileage ? ` (${mileage} mi)` : ''}`);
     }
   } catch (error) {
-    console.log('Error processing JSON-LD vehicle:', error.message);
+    console.log('Error processing JSON-LD vehicle:', (error as Error).message);
   }
 }
 
