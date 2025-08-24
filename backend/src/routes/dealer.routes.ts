@@ -135,6 +135,76 @@ router.get('/execute-sql', async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/v1/dealers/create-vehicle-listings - Convert Car Choice inventory to vehicle listings
+router.get('/create-vehicle-listings', async (req: Request, res: Response) => {
+  try {
+    console.log('🚗 Converting Car Choice inventory to vehicle listings...');
+    
+    // Get all Car Choice inventory data
+    const inventoryResult = await pool.query('SELECT * FROM car_choice_inventory ORDER BY position');
+    
+    if (inventoryResult.rows.length === 0) {
+      return res.status(404).json({ error: 'No Car Choice inventory found' });
+    }
+    
+    // Clear existing Car Choice vehicles
+    await pool.query('DELETE FROM vehicles WHERE dealer_id = 4');
+    
+    let processed = 0;
+    
+    for (const item of inventoryResult.rows) {
+      const { position, vehicle_info, image_url } = item;
+      
+      // Parse vehicle info (e.g., "2018 Mitsubishi Outlander Sport SE 2.4 AWC CVT")
+      const yearMatch = vehicle_info.match(/^(\d{4})/);
+      const year = yearMatch ? parseInt(yearMatch[1]) : null;
+      
+      const remaining = vehicle_info.substring(4).trim();
+      const makeMatch = remaining.match(/^(\w+)/);
+      const make = makeMatch ? makeMatch[1] : 'Unknown';
+      
+      const model = remaining.substring(make.length).trim() || 'Unknown';
+      
+      if (year && make) {
+        const vin = `CC${year}${make.substring(0, 3).toUpperCase()}${String(position).padStart(6, '0')}`;
+        
+        // Insert into vehicles table
+        await pool.query(`
+          INSERT INTO vehicles (
+            vin, year, make, model, dealer_id, title, 
+            is_active, is_available, condition, 
+            created_at, updated_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        `, [vin, year, make, model, 4, vehicle_info, true, true, 'used']);
+        
+        // Add vehicle image if available and not placeholder
+        if (image_url && !image_url.includes('onepix.png') && image_url.startsWith('http')) {
+          await pool.query(`
+            INSERT INTO vehicle_images (vehicle_vin, image_url, is_primary, created_at)
+            VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+            ON CONFLICT (vehicle_vin, image_url) DO NOTHING
+          `, [vin, image_url, true]);
+        }
+        
+        processed++;
+      }
+    }
+    
+    // Get final count
+    const vehicleCount = await pool.query('SELECT COUNT(*) FROM vehicles WHERE dealer_id = 4');
+    
+    return res.json({
+      success: true,
+      message: `Created ${processed} vehicle listings for Car Choice`,
+      totalVehicles: parseInt(vehicleCount.rows[0].count)
+    });
+    
+  } catch (error) {
+    console.error('Vehicle listing creation error:', error);
+    return res.status(500).json({ error: 'Failed to create vehicle listings', details: error.message });
+  }
+});
+
 // GET /api/v1/dealers - Get all dealers
 router.get('/', getDealers);
 
