@@ -172,7 +172,8 @@ export class BrowseAIService {
       
       // Get all available lists from Browse AI
       const availableLists = Object.keys(capturedData);
-      console.log('Available Browse AI lists:', availableLists);
+      console.log('🔍 Available Browse AI lists:', availableLists);
+      console.log('🔍 Full captured data structure:', JSON.stringify(capturedData, null, 2).substring(0, 1000));
       
       // Try to find the vehicle list - look for common names or use the first available list
       let vehicleList: any[] = [];
@@ -212,10 +213,13 @@ export class BrowseAIService {
       
       for (const item of vehicleList) {
         try {
+          console.log('🔍 Processing vehicle item:', JSON.stringify(item, null, 2).substring(0, 300));
           const vehicle = this.parseVehicleItem(item, config);
           if (vehicle) {
             vehicles.push(vehicle);
             console.log(`✅ Processed: ${vehicle.year} ${vehicle.make} ${vehicle.model}`);
+          } else {
+            console.log('❌ Failed to parse vehicle item - returned null');
           }
         } catch (error) {
           console.log('❌ Error processing vehicle item:', error);
