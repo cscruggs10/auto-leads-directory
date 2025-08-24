@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { 
   getDealers, 
   getDealerById,
@@ -14,7 +14,7 @@ const router = Router();
 router.use(sanitizeInput);
 
 // GET /api/v1/dealers/load-car-choice - Load Car Choice CSV data
-router.get('/load-car-choice', async (req, res) => {
+router.get('/load-car-choice', async (req: Request, res: Response) => {
   try {
     console.log('🚀 Loading Car Choice inventory from CSV...');
     
