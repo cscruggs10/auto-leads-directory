@@ -136,7 +136,7 @@ export default function HomePage() {
             {/* Car Choice */}
             <div className="flex items-center justify-center hover:scale-105 transition-transform">
               <img 
-                src="/images/dealers/Car choice.png" 
+                src="/images/dealers/car-choice.png" 
                 alt="Car Choice" 
                 className="h-16 w-auto object-contain"
               />
@@ -145,7 +145,7 @@ export default function HomePage() {
             {/* Olive Branch Auto Sales */}
             <div className="flex items-center justify-center hover:scale-105 transition-transform">
               <img 
-                src="/images/dealers/Ob Auto Sales.jpeg" 
+                src="/images/dealers/olive-branch-auto-sales.jpeg" 
                 alt="Olive Branch Auto Sales" 
                 className="h-16 w-auto object-contain"
               />
@@ -154,7 +154,7 @@ export default function HomePage() {
             {/* Landers */}
             <div className="flex items-center justify-center hover:scale-105 transition-transform">
               <img 
-                src="/images/dealers/Landers logo.png" 
+                src="/images/dealers/landers-logo.png" 
                 alt="Landers" 
                 className="h-16 w-auto object-contain"
               />
@@ -163,7 +163,7 @@ export default function HomePage() {
             {/* i Finance */}
             <div className="flex items-center justify-center hover:scale-105 transition-transform">
               <img 
-                src="/images/dealers/i Finance_Artboard 3 (1) (1).png" 
+                src="/images/dealers/ifinance-logo.png" 
                 alt="i Finance" 
                 className="h-16 w-auto object-contain"
               />
@@ -172,7 +172,7 @@ export default function HomePage() {
             {/* DriveTime */}
             <div className="flex items-center justify-center hover:scale-105 transition-transform">
               <img 
-                src="/images/dealers/Drivetime logo.png" 
+                src="/images/dealers/drivetime-logo.png" 
                 alt="DriveTime" 
                 className="h-16 w-auto object-contain"
               />
