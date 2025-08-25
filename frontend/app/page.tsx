@@ -50,11 +50,11 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-5xl lg:text-6xl font-bold text-text-primary mb-6 leading-tight">
-              Stop Begging Dealerships for Approval.{' '}
+              Memphis Car Shoppers: Stop Begging Dealerships for Approval.{' '}
               <span className="text-primary">Make Them Compete for YOU.</span>
             </h1>
             <p className="text-xl lg:text-2xl text-text-secondary mb-12 leading-relaxed">
-              We'll share your info with our network of 50+ dealerships who WANT subprime buyers. 
+              We'll share your info with our network of 50+ Memphis dealerships who WANT subprime buyers. 
               Watch them fight to earn your business with their best offers.
             </p>
             
