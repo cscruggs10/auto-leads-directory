@@ -14,7 +14,7 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <div className="text-2xl font-bold text-primary">
-              The Car<span className="text-secondary">Buyer</span> Assistant
+              Buyer<span className="text-secondary">Assist</span> Network
             </div>
           </Link>
 
