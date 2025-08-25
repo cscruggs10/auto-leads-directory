@@ -124,13 +124,17 @@ export default function HomePage() {
           
           {/* Dealer Logos Grid - Intentionally mismatched for authentic directory look */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {/* Car World - Official branding */}
-            <div className="bg-gradient-to-br from-black via-gray-900 to-black border-2 border-gray-800 rounded-lg p-6 hover:shadow-xl transition-shadow relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-12 h-12 bg-yellow-400" style={{ backgroundColor: '#ffed30', clipPath: 'polygon(0 0, 100% 0, 100% 100%)' }}></div>
+            {/* Car World - Official logo */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:shadow-xl transition-shadow">
               <div className="h-20 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white tracking-wider">CAR WORLD</div>
-                  <div className="text-xs mt-1" style={{ color: '#ffed30' }}>A whole new way to drive</div>
+                <div className="flex items-center gap-2">
+                  {/* Yellow and red stripes */}
+                  <div className="flex">
+                    <div className="w-4 h-12 bg-yellow-400" style={{ backgroundColor: '#FFD700' }}></div>
+                    <div className="w-3 h-12 bg-red-600" style={{ backgroundColor: '#DC143C' }}></div>
+                  </div>
+                  {/* CAR WORLD text */}
+                  <div className="text-3xl font-black text-black tracking-tight">CAR WORLD</div>
                 </div>
               </div>
             </div>
