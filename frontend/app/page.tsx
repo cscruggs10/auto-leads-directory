@@ -172,16 +172,18 @@ export default function HomePage() {
               </div>
             </div>
             
-            {/* i Finance - Official branding */}
-            <div className="bg-white border-4 border-blue-700 rounded-3xl p-6 hover:shadow-xl transition-shadow relative">
+            {/* i Finance - Official logo */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:shadow-xl transition-shadow">
               <div className="h-20 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-xs font-bold text-blue-700 mb-1">CARS & CREDIT</div>
-                  <div className="relative">
-                    <div className="text-3xl font-bold italic" style={{ color: '#DC2626', fontFamily: 'serif' }}>
-                      i<span className="text-2xl">Finance</span>
+                <div className="relative">
+                  {/* Oval border */}
+                  <div className="border-4 rounded-full px-8 py-3" style={{ borderColor: '#003D7A', transform: 'scaleX(1.5)' }}>
+                    <div className="text-center" style={{ transform: 'scaleX(0.67)' }}>
+                      <div className="text-xs font-bold mb-0" style={{ color: '#003D7A' }}>CARS & CREDIT</div>
+                      <div className="text-3xl font-bold italic" style={{ color: '#DC2626', fontFamily: 'serif', marginTop: '-4px' }}>
+                        iFinance
+                      </div>
                     </div>
-                    <div className="absolute -bottom-2 left-0 right-0 h-1 bg-red-600 rounded-full"></div>
                   </div>
                 </div>
               </div>
