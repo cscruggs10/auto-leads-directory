@@ -183,12 +183,12 @@ export default function HomePage() {
               </div>
             </div>
             
-            {/* DriveTime - Orange brand */}
-            <div className="bg-gradient-to-br from-orange-400 to-orange-500 border-2 border-orange-600 rounded-lg p-6 hover:shadow-xl transition-shadow">
+            {/* DriveTime - Official green brand */}
+            <div className="bg-white border-2 rounded-lg p-6 hover:shadow-xl transition-shadow" style={{ borderColor: '#018445' }}>
               <div className="h-20 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">DriveTime</div>
-                  <div className="text-xs text-white/90 mt-1">In-House Financing</div>
+                  <div className="text-3xl font-bold" style={{ color: '#018445' }}>DriveTime</div>
+                  <div className="text-xs text-gray-600 mt-1">Used Cars & Financing</div>
                 </div>
               </div>
             </div>
