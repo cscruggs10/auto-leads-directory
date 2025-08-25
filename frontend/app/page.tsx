@@ -127,15 +127,11 @@ export default function HomePage() {
             {/* Car World - Official logo */}
             <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:shadow-xl transition-shadow">
               <div className="h-20 flex items-center justify-center">
-                <div className="flex items-center gap-2">
-                  {/* Yellow and red stripes */}
-                  <div className="flex">
-                    <div className="w-4 h-12 bg-yellow-400" style={{ backgroundColor: '#FFD700' }}></div>
-                    <div className="w-3 h-12 bg-red-600" style={{ backgroundColor: '#DC143C' }}></div>
-                  </div>
-                  {/* CAR WORLD text */}
-                  <div className="text-3xl font-black text-black tracking-tight">CAR WORLD</div>
-                </div>
+                <img 
+                  src="/images/dealers/logo-carworldarkansas.png" 
+                  alt="Car World" 
+                  className="h-full w-auto object-contain"
+                />
               </div>
             </div>
             
@@ -175,17 +171,11 @@ export default function HomePage() {
             {/* i Finance - Official logo */}
             <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:shadow-xl transition-shadow">
               <div className="h-20 flex items-center justify-center">
-                <div className="relative">
-                  {/* Oval border */}
-                  <div className="border-4 rounded-full px-8 py-3" style={{ borderColor: '#003D7A', transform: 'scaleX(1.5)' }}>
-                    <div className="text-center" style={{ transform: 'scaleX(0.67)' }}>
-                      <div className="text-xs font-bold mb-0" style={{ color: '#003D7A' }}>CARS & CREDIT</div>
-                      <div className="text-3xl font-bold italic" style={{ color: '#DC2626', fontFamily: 'serif', marginTop: '-4px' }}>
-                        iFinance
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <img 
+                  src="/images/dealers/i Finance_Artboard 3 (1) (1).png" 
+                  alt="i Finance" 
+                  className="h-full w-auto object-contain"
+                />
               </div>
             </div>
             
