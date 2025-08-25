@@ -49,8 +49,17 @@ export default function HomePage() {
       <section className="relative bg-gradient-to-br from-gray-50 to-white py-20 lg:py-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
+            {/* Call to Action Banner */}
+            <div className="mb-8 animate-pulse">
+              <div className="inline-flex items-center gap-3 bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-full shadow-lg">
+                <span className="text-2xl">📢</span>
+                <span className="font-bold text-lg uppercase tracking-wide">ATTN: Memphis Car Shoppers</span>
+                <span className="text-2xl">🚗</span>
+              </div>
+            </div>
+            
             <h1 className="text-5xl lg:text-6xl font-bold text-text-primary mb-6 leading-tight">
-              Memphis Car Shoppers: Stop Begging Dealerships for Approval.{' '}
+              Stop Begging Dealerships for Approval.{' '}
               <span className="text-primary">Make Them Compete for YOU.</span>
             </h1>
             <p className="text-xl lg:text-2xl text-text-secondary mb-12 leading-relaxed">
