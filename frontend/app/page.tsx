@@ -110,6 +110,118 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Live Dealer Examples Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl lg:text-4xl font-bold text-text-primary mb-4">
+              Live Dealer Examples in Our Network
+            </h2>
+            <p className="text-lg text-text-secondary">
+              Real Memphis dealerships actively competing for your business right now
+            </p>
+          </div>
+          
+          {/* Dealer Logos Grid - Intentionally mismatched for authentic directory look */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {/* Car World - Official branding */}
+            <div className="bg-gradient-to-br from-black via-gray-900 to-black border-2 border-gray-800 rounded-lg p-6 hover:shadow-xl transition-shadow relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-12 h-12 bg-yellow-400" style={{ backgroundColor: '#ffed30', clipPath: 'polygon(0 0, 100% 0, 100% 100%)' }}></div>
+              <div className="h-20 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white tracking-wider">CAR WORLD</div>
+                  <div className="text-xs mt-1" style={{ color: '#ffed30' }}>A whole new way to drive</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Car Choice - Official branding */}
+            <div className="bg-white border-2 border-gray-300 rounded-lg p-6 hover:shadow-xl transition-shadow">
+              <div className="h-20 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-900">CAR CHOICE</div>
+                  <div className="text-xs text-gray-600 mt-1">Quality Used Cars</div>
+                  <div className="text-xs text-green-600 font-semibold">Guaranteed Approval</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Olive Branch Auto Sales - Classic style */}
+            <div className="bg-gradient-to-br from-gray-100 to-white border-2 border-gray-400 rounded-lg p-6 hover:shadow-xl transition-shadow">
+              <div className="h-20 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-lg font-serif text-green-700">Olive Branch</div>
+                  <div className="text-xl font-bold text-gray-800">AUTO SALES</div>
+                  <div className="text-xs text-gray-500 mt-1">Since 1995</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Landers Auto Sales - Professional blue */}
+            <div className="bg-gradient-to-br from-blue-50 to-white border-2 border-blue-600 rounded-lg p-6 hover:shadow-xl transition-shadow">
+              <div className="h-20 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-800">LANDERS</div>
+                  <div className="text-sm font-semibold text-gray-600">AUTO SALES</div>
+                  <div className="text-xs text-blue-600 mt-1">Used Cars & Trucks</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* i Finance - Official branding */}
+            <div className="bg-white border-4 border-blue-700 rounded-3xl p-6 hover:shadow-xl transition-shadow relative">
+              <div className="h-20 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-xs font-bold text-blue-700 mb-1">CARS & CREDIT</div>
+                  <div className="relative">
+                    <div className="text-3xl font-bold italic" style={{ color: '#DC2626', fontFamily: 'serif' }}>
+                      i<span className="text-2xl">Finance</span>
+                    </div>
+                    <div className="absolute -bottom-2 left-0 right-0 h-1 bg-red-600 rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* DriveTime - Orange brand */}
+            <div className="bg-gradient-to-br from-orange-400 to-orange-500 border-2 border-orange-600 rounded-lg p-6 hover:shadow-xl transition-shadow">
+              <div className="h-20 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">DriveTime</div>
+                  <div className="text-xs text-white/90 mt-1">In-House Financing</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* CarMax - Official red */}
+            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:shadow-xl transition-shadow">
+              <div className="h-20 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-2xl font-bold" style={{ color: '#CE2127' }}>CARMAX</div>
+                  <div className="text-xs text-gray-500 mt-1">The Way It Should Be</div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Carvana - Modern tech style */}
+            <div className="bg-gradient-to-r from-blue-500 to-teal-400 border-2 border-gray-200 rounded-lg p-6 hover:shadow-xl transition-shadow">
+              <div className="h-20 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">CARVANA</div>
+                  <div className="text-xs text-white/90">The New Way</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-center mt-8">
+            <p className="text-sm text-text-secondary">
+              + 40 more dealerships in our network • New dealers joining weekly
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Dealerships Network */}
       <DealershipsNetwork />
 
