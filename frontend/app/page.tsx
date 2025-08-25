@@ -122,91 +122,60 @@ export default function HomePage() {
             </p>
           </div>
           
-          {/* Dealer Logos Grid - Intentionally mismatched for authentic directory look */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {/* Car World - Official logo */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:shadow-xl transition-shadow">
-              <div className="h-20 flex items-center justify-center">
-                <img 
-                  src="/images/dealers/logo-carworldarkansas.png" 
-                  alt="Car World" 
-                  className="h-full w-auto object-contain"
-                />
-              </div>
+          {/* Dealer Logos Grid - Clean logo display */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-8 items-center">
+            {/* Car World */}
+            <div className="flex items-center justify-center hover:scale-105 transition-transform">
+              <img 
+                src="/images/dealers/logo-carworldarkansas.png" 
+                alt="Car World" 
+                className="h-16 w-auto object-contain"
+              />
             </div>
             
-            {/* Car Choice - Official branding */}
-            <div className="bg-white border-2 border-gray-300 rounded-lg p-6 hover:shadow-xl transition-shadow">
-              <div className="h-20 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-900">CAR CHOICE</div>
-                  <div className="text-xs text-gray-600 mt-1">Quality Used Cars</div>
-                  <div className="text-xs text-green-600 font-semibold">Guaranteed Approval</div>
-                </div>
-              </div>
+            {/* Car Choice */}
+            <div className="flex items-center justify-center hover:scale-105 transition-transform">
+              <img 
+                src="/images/dealers/Car choice.png" 
+                alt="Car Choice" 
+                className="h-16 w-auto object-contain"
+              />
             </div>
             
-            {/* Olive Branch Auto Sales - Classic style */}
-            <div className="bg-gradient-to-br from-gray-100 to-white border-2 border-gray-400 rounded-lg p-6 hover:shadow-xl transition-shadow">
-              <div className="h-20 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-lg font-serif text-green-700">Olive Branch</div>
-                  <div className="text-xl font-bold text-gray-800">AUTO SALES</div>
-                  <div className="text-xs text-gray-500 mt-1">Since 1995</div>
-                </div>
-              </div>
+            {/* Olive Branch Auto Sales */}
+            <div className="flex items-center justify-center hover:scale-105 transition-transform">
+              <img 
+                src="/images/dealers/Ob Auto Sales.jpeg" 
+                alt="Olive Branch Auto Sales" 
+                className="h-16 w-auto object-contain"
+              />
             </div>
             
-            {/* Landers Auto Sales - Professional blue */}
-            <div className="bg-gradient-to-br from-blue-50 to-white border-2 border-blue-600 rounded-lg p-6 hover:shadow-xl transition-shadow">
-              <div className="h-20 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-800">LANDERS</div>
-                  <div className="text-sm font-semibold text-gray-600">AUTO SALES</div>
-                  <div className="text-xs text-blue-600 mt-1">Used Cars & Trucks</div>
-                </div>
-              </div>
+            {/* Landers */}
+            <div className="flex items-center justify-center hover:scale-105 transition-transform">
+              <img 
+                src="/images/dealers/Landers logo.png" 
+                alt="Landers" 
+                className="h-16 w-auto object-contain"
+              />
             </div>
             
-            {/* i Finance - Official logo */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:shadow-xl transition-shadow">
-              <div className="h-20 flex items-center justify-center">
-                <img 
-                  src="/images/dealers/i Finance_Artboard 3 (1) (1).png" 
-                  alt="i Finance" 
-                  className="h-full w-auto object-contain"
-                />
-              </div>
+            {/* i Finance */}
+            <div className="flex items-center justify-center hover:scale-105 transition-transform">
+              <img 
+                src="/images/dealers/i Finance_Artboard 3 (1) (1).png" 
+                alt="i Finance" 
+                className="h-16 w-auto object-contain"
+              />
             </div>
             
-            {/* DriveTime - Official green brand */}
-            <div className="bg-white border-2 rounded-lg p-6 hover:shadow-xl transition-shadow" style={{ borderColor: '#018445' }}>
-              <div className="h-20 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-3xl font-bold" style={{ color: '#018445' }}>DriveTime</div>
-                  <div className="text-xs text-gray-600 mt-1">Used Cars & Financing</div>
-                </div>
-              </div>
-            </div>
-            
-            {/* CarMax - Official red */}
-            <div className="bg-white border-2 border-gray-200 rounded-lg p-6 hover:shadow-xl transition-shadow">
-              <div className="h-20 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-2xl font-bold" style={{ color: '#CE2127' }}>CARMAX</div>
-                  <div className="text-xs text-gray-500 mt-1">The Way It Should Be</div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Carvana - Modern tech style */}
-            <div className="bg-gradient-to-r from-blue-500 to-teal-400 border-2 border-gray-200 rounded-lg p-6 hover:shadow-xl transition-shadow">
-              <div className="h-20 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">CARVANA</div>
-                  <div className="text-xs text-white/90">The New Way</div>
-                </div>
-              </div>
+            {/* DriveTime */}
+            <div className="flex items-center justify-center hover:scale-105 transition-transform">
+              <img 
+                src="/images/dealers/Drivetime logo.png" 
+                alt="DriveTime" 
+                className="h-16 w-auto object-contain"
+              />
             </div>
           </div>
           
